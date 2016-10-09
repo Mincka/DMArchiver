@@ -2,7 +2,7 @@
 A tool to archive **all** the direct messages from your private conversations on Twitter.
 
 ## Introduction
-Have you ever need to retrieve old information from a chat with your friends on Tweeter? Or maybe you would just like to backup all these cheerful moments and keep them safe.
+Have you ever need to retrieve old information from a chat with your friends on Twitter? Or maybe you would just like to backup all these cheerful moments and keep them safe.
 
 I have made this tool to retrieve all the tweets from my private conversations and transform them in an _IRC-like_ log for archiving. Emoji are currently kept with their description to prevent encoding issues.
 
@@ -13,7 +13,7 @@ I have made this tool to retrieve all the tweets from my private conversations a
 [2016-09-07 10:38:10] <Steve> You guys are ridiculous! [Face with tears of joy]
 ```
 
-This tool is also able to **download all the uploaded images** in their original resolution and, as a bonus, also retrieve the **GIFs** you used in your conversation as MP4 files (the format used by Tweeter to optimized them and save space).
+This tool is also able to **download all the uploaded images** in their original resolution and, as a bonus, also retrieve the **GIFs** you used in your conversation as MP4 files (the format used by Twitter to optimized them and save space).
 
 This tool does not leverage the Twitter API because of its very restrictive limitations in regard of the handling of the Direct Messages. Actually, it is currently possible to retrieve only the latest 200 messages of a private conversation.
 
@@ -21,10 +21,10 @@ Because it is still possible to retrieve the older messages from a Direct Conver
 
 ## Prerequisites
 You need two things to retrieve your tweets:
-- Your `auth-token` value, which is present in your `auth-token` cookie when you are connected on Twitter. This is a 40 characters string like `9e6ecbd088g0baaf2fa9cf2c690aca8ff8027b9f`. Do not share your `auth-token` with anyone, it is like a password to authenticate on the Tweeter site or API.
+- Your `auth-token` value, which is present in your `auth-token` cookie when you are connected on Twitter. This is a 40 characters string like `9e6ecbd088g0baaf2fa9cf2c690aca8ff8027b9f`. Do not share your `auth-token` with anyone, it is like a password to authenticate on the Twitter site or API.
 - The `conversation-id` which is the identifier of the conversation you want to backup. This one is just a little bit harder to find:
 	- Open the _Network_ panel in the _Development Tools_ of your favorite browser.
-	- Open a the desired conversation on Tweeter and have a look in the requests.
+	- Open the desired conversation on Twitter and have a look at the requests.
 	- Identify a request with the following arguments:
 	`https://twitter.com/messages/with/conversation?id=645754097571131337&max_entry_id=78473919348771337`
 	- Use the `id` value as your `conversation-id`. This identifier can contain special characters such as '-'.
@@ -53,6 +53,10 @@ $ dmarchiver --help
                             Download images
       -dg, --download-gifs  Download GIFs (as MP4)
 ```
+
+### Example
+
+`$ dmarchiver -di -dg "645754097571131337" "9e6ecbd088g0baaf2fa9cf2c690aca8ff8027b9f"`
 
 The script output is a `tweets.txt` file with the conversation formatted in an _IRC-like_ style.
 
