@@ -75,8 +75,19 @@ $ pip install -r requirements.txt
 $ python setup.py install
 ```
 
+## Windows binary build
+You can build it yourself with `pyinstaller` or just check out the project releases.
+
+```
+> pip install pyinstaller
+> pyinstaller --onefile dmarchiver\cmdline.py -n dmarchiver.exe
+> cd dist
+> dmarchiver.exe
+```
+
 ## Troubleshooting
 You may encounter building issues with the `lxml` library on Windows. The most simple and straightforward fix is to download and install a precompiled binary from [this site](http://www.lfd.uci.edu/~gohlke/pythonlibs/#lxml) and install the package locally:
+
 `$ pip install lxml-3.6.4-cp35-cp35m-win_amd64.whl`
 
 ## License

@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 """
     Direct Messages Archiver - Command Line
@@ -33,3 +33,6 @@ def main():
   
     crawler = Crawler(args.conversation_id[0], args.auth_token[0])
     crawler.crawl(args.download_images, args.download_gifs)
+    
+if __name__ == "__main__":
+    main()

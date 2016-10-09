@@ -1,2 +1,2 @@
-include *.md
-include *.txt
+include README.md
+include requirements.txt
