@@ -5,9 +5,10 @@
     
     Usage:
  
-    >>> from dmarchiver import Crawler
-    >>> crawler = Crawler('CONVERSATION_ID', 'AUTH_TOKEN')
-    >>> crawler.crawl()
+    >>> from dmarchiver.core import Crawler
+    >>> crawler = Crawler()
+    >>> crawler.authenticate('username', 'password')
+    >>> crawler.crawl('conversation_id')
 """
  
 import argparse
@@ -64,7 +65,7 @@ class Conversation(object):
                     file_buffer += '{0} '.format(element)
                 file_buffer += '{0}'.format(os.linesep)
             elif type(tweet[1]).__name__ == 'DMConversationEntry':
-                file_buffer += '[DMConversationEntry] {0}\r'.format(tweet[1])
+                file_buffer += '[DMConversationEntry] {0}{1}'.format(tweet[1], os.linesep)
         
         # Convert all '\n' of the buffer to os.linesep
         file_buffer = file_buffer.replace('\n', os.linesep)
@@ -154,19 +155,52 @@ class DirectMessageMedia(object):
 
 class Crawler(object):
     _twitter_base_url = 'https://twitter.com'
-    _url = 'https://twitter.com/messages/with/conversation'
-    _headers = {
+    _http_headers =  {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64; rv:47.0) Gecko/20100101 Firefox/47.0'}
+    _ajax_headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64; rv:47.0) Gecko/20100101 Firefox/47.0',
             'Accept': 'application/json, text/javascript, */*; q=0.01',
             'X-Requested-With': 'XMLHttpRequest'}
     
-    def __init__(self, conversation_id, auth_token):      
-        self.conversation_id = conversation_id
-        self._auth_token = auth_token
-        self._payload = {'id': self.conversation_id}
-        self._cookies = {
-            'auth_token': self._auth_token}
+    def authenticate(self, username, password):
+        login_url = self._twitter_base_url + '/login'
+        sessions_url = self._twitter_base_url + '/sessions'
+        
+        self._session = requests.Session()
 
+        r = self._session.get(
+            login_url,
+            headers = self._http_headers,
+            verify = False)
+
+        document = lxml.html.document_fromstring(r.text)
+        authenticity_token = document.xpath('//input[@name="authenticity_token"]/@value')[0]
+
+        payload = {'session[username_or_email]': username,
+                   'session[password]': password,
+                   'authenticity_token': authenticity_token}
+            
+        r = self._session.post(
+            sessions_url,
+            headers = self._ajax_headers,
+            params = payload,
+            verify = False)
+        cookies = requests.utils.dict_from_cookiejar(self._session.cookies)
+        if 'auth_token' in cookies:
+            print('Authentication succeedeed.')
+        else:
+            raise PermissionError('Your username or password was invalid.')
+    
+    def get_threads(self):
+        messages_url = self._twitter_base_url + '/messages'
+        
+        r = self._session.get(
+        messages_url,
+        headers = self._ajax_headers,
+        verify = False)
+
+        json = r.json()
+        return json['inner']['threads']
+    
     def _extract_dm_text_url(self, element, expanding_mode='only_expanded'):
         raw_url = ''
         if expanding_mode == 'only_expanded':
@@ -219,11 +253,10 @@ class Crawler(object):
                     dm_text += self._extract_dm_text_emoji(text)  
             else:
                 if text.text is not None:
-                    #print('++ Text: ' + text.text)
                     dm_text += text.text
         return DirectMessageText(dm_text)
 
-    def _parse_dm_media(self, element, tweet_id, session, auth_token, download_images, download_gif):
+    def _parse_dm_media(self, element, tweet_id, download_images, download_gif):
         media_url = ''
         media_preview_url = ''
         media_type = MediaType.unknown
@@ -237,11 +270,9 @@ class Crawler(object):
             media_filename_re = re.findall(tweet_id + '/(.+)/(.+)$', media_url)
             media_filename = tweet_id + '-' + \
                 media_filename_re[0][0] + '-' + media_filename_re[0][1]
-            #print('++ Media: ' + media_url)
             
             if download_images:
-                cookies = {'auth_token': auth_token}
-                r = session.get(media_url, cookies=cookies, verify=False, stream=True)
+                r = self._session.get(media_url, verify=False, stream=True)
                 if r.status_code == 200:
                     os.makedirs('images', exist_ok=True)
                     with open('images/' + media_filename, 'wb') as f:
@@ -258,7 +289,7 @@ class Crawler(object):
                 0] + '-' + media_filename_re[0][1]
 
             if download_gif:
-                r = session.get(media_url, verify=False, stream=True)
+                r = self._session.get(media_url, verify=False, stream=True)
                 if r.status_code == 200:
                     os.makedirs('mp4', exist_ok=True)
                     with open('mp4/' + media_filename, 'wb') as f:
@@ -279,7 +310,6 @@ class Crawler(object):
         tweet_url = element.cssselect('a.QuoteTweet-link')[0]
         tweet_url = '{0}{1}'.format(
             self._twitter_base_url, tweet_url.get('href'))
-        #print('++ Tweet link: ' + self.twitter_base_url + tweet_url.get('href'))
         return DirectMessageTweet(tweet_url)
 
     def _parse_dm_card(self, element):
@@ -288,10 +318,9 @@ class Crawler(object):
             'div[class^=" card-type-"], div[class*=" card-type-"]')[0]
         card_url = '{0} - Type: {1}'.format(
             card.get('data-card-url'), card.get('data-card-name'))
-        #print('++ Card URL: ' + card.get('data-card-url') + ' ' + card.get('data-card-name'))
         return DirectMessageCard(card_url)
 
-    def _process_tweets(self, session, auth_token, tweets, download_images, download_gif):
+    def _process_tweets(self, tweets, download_images, download_gif):
         conversation_set = collections.OrderedDict()
         
         orderedTweets = sorted(tweets, reverse=True)
@@ -309,9 +338,6 @@ class Crawler(object):
             value = tweets[tweet_id]
             document = lxml.html.fragment_fromstring(value)
             
-            #print('------------------')
-            #print('#' + tweet_id)
-
             dm_container = document.cssselect('div.DirectMessage-container')
 
             # Generic messages such as "X has join the group" or "The group has
@@ -344,24 +370,19 @@ class Crawler(object):
                     if 'DirectMessage-text' in dm_element_type:
                         element_object = self._parse_dm_text(dm_element)
                         message.elements.append(element_object)
-                        #print(element_object)
                     elif dm_element_type == 'DirectMessage-media':
-                        element_object = self._parse_dm_media(dm_element, tweet_id, session, auth_token, download_images, download_gif)
+                        element_object = self._parse_dm_media(dm_element, tweet_id, download_images, download_gif)
                         message.elements.append(element_object)
-                        #print(element_object)
                     elif dm_element_type == 'DirectMessage-tweet':
                         element_object = self._parse_dm_tweet(dm_element)
                         message.elements.append(element_object)
-                        #print(element_object)
                     elif dm_element_type == 'DirectMessage-card':
                         element_object = self._parse_dm_card(dm_element)
                         message.elements.append(element_object)
-                        #print(element_object)
                     else:
                         print('Unknown element type')
 
             elif len(dm_conversation_entry) > 0:
-                #print(dm_conversation_entry[0].text)
                 dm_element_text = dm_conversation_entry[0].text.strip()
                 message = DMConversationEntry(tweet_id, dm_element_text)
                         
@@ -369,39 +390,33 @@ class Crawler(object):
                 conversation_set[tweet_id]  = message
         return conversation_set
     
-    def crawl(self, download_images=False, download_gif=False):
-        session = requests.Session()
-        conversation = Conversation(self.conversation_id)
+    def crawl(self, conversation_id, download_images=False, download_gif=False):
+        print('Starting crawl of \'{0}\''.format(conversation_id))
+        conversation = Conversation(conversation_id)
+        conversation_url = self._twitter_base_url + '/messages/with/conversation'
+        payload = {'id': conversation_id}
         processed_tweet_counter = 0
         
         while True:
-            r = session.get(
-                self._url,
-                headers = self._headers,
-                cookies = self._cookies,
-                params = self._payload,
+            r = self._session.get(
+                conversation_url,
+                headers = self._ajax_headers,
+                params = payload,
                 verify = False)
 
-            #print(r.text)
             json = r.json()
 
             if 'max_entry_id' not in json:
-                # End of thread
                 print('Begin of thread reached')
                 break
 
-            #print('max_entry_id: ' + json['max_entry_id'])
-
-            # To call back to make the loop
-            #print('min_entry_id: ' + json['min_entry_id'])
-
-            self._payload = {'id': self.conversation_id,
+            payload = {'id': conversation_id,
                             'max_entry_id': json['min_entry_id']}
 
             tweets = json['items']
             
             # Get tweets for the current request
-            conversation_set = self._process_tweets(session, self._auth_token, tweets, download_images, download_gif)
+            conversation_set = self._process_tweets(tweets, download_images, download_gif)
                        
             # Append to the whole conversation
             for tweet_id in conversation_set:
@@ -414,5 +429,5 @@ class Crawler(object):
         #print('Printing conversation')
         #conversation.print_conversation()
         
-        print('Writing conversation')
-        conversation.write_conversation('tweets.txt')
+        print('Writing conversation to {0}.txt'.format(conversation_id))
+        conversation.write_conversation('{0}.txt'.format(conversation_id))

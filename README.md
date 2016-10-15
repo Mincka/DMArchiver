@@ -19,54 +19,66 @@ This tool does not leverage the Twitter API because of its very restrictive limi
 
 Because it is still possible to retrieve the older messages from a Direct Conversation by scrolling up, this script only simulates this behavior to retrieve automatically the messages.
 
-## Prerequisites
-You need two things to retrieve your tweets:
-- Your `auth-token` value, which is present in your `auth-token` cookie when you are connected on Twitter. This is a 40 characters string like `9e6ecbd088g0baaf2fa9cf2c690aca8ff8027b9f`. Do not share your `auth-token` with anyone, it is like a password to authenticate on the Twitter site or API.
-- The `conversation-id` which is the identifier of the conversation you want to backup. This one is just a little bit harder to find:
-	- Open the _Network_ panel in the _Development Tools_ of your favorite browser.
-	- Open the desired conversation on Twitter and have a look at the requests.
-	- Identify a request with the following arguments:
-	`https://twitter.com/messages/with/conversation?id=645754097571131337&max_entry_id=78473919348771337`
-	- Use the `id` value as your `conversation-id`. This identifier can contain special characters such as '-'.
-	
-I will try to ease this setup in a future version. :wink:
+## Installation & Quick start
+### Ubuntu
+Python 3 should be already there.
 
-## Installation
-### Using pip
-`$ pip install dmarchiver`
+```
+$ pip install dmarchiver
+$ dmarchiver
+```
+### Windows
+You can build it yourself with `pyinstaller` or just check out the [project releases](https://github.com/Mincka/DMArchiver/releases) for binary builds.
+
+```
+> pip install pyinstaller
+> pyinstaller --onefile dmarchiver\cmdline.py -n dmarchiver.exe
+> cd dist
+> dmarchiver.exe
+```
+
+### macOS
+You may need to install Python 3.
+
+```
+$ brew install python3
+$ pip3 install dmarchiver
+$ dmarchiver
+```
 
 ## Usage
 
 ### Command line tool
 ```
-$ dmarchiver [-h] [-di] [-dg] conversation-id auth-token
-$ dmarchiver-script.py [-h] [-di] [-dg] conversation-id auth-token
+$ dmarchiver [-h] [-id CONVERSATION_ID] [-di] [-dg]
 
 $ dmarchiver --help
-    positional arguments:
-      conversation-id       Conversation ID
-      auth-token            Authentication token
-
-    optional arguments:
-      -h, --help            show this help message and exit
-      -di, --download-images
-                            Download images
-      -dg, --download-gifs  Download GIFs (as MP4)
+	usage: cmdline.py [-h] [-id CONVERSATION_ID] [-di] [-dg]
+	
+	optional arguments:
+	  -h, --help            show this help message and exit
+	  -id CONVERSATION_ID, --conversation_id CONVERSATION_ID
+	                        Conversation ID
+	  -di, --download-images
+	                        Download images
+	  -dg, --download-gifs  Download GIFs (as MP4)
 ```
 
 ### Example
+To retrieve only a conversation with images and GIFs:
 
-`$ dmarchiver -di -dg "645754097571131337" "9e6ecbd088g0baaf2fa9cf2c690aca8ff8027b9f"`
+`$ dmarchiver -id "645754097571131337" -di -dg`
 
-The script output is a `tweets.txt` file with the conversation formatted in an _IRC-like_ style.
+The script output will be the `645754097571131337.txt` file with the conversation formatted in an _IRC-like_ style.
 
-If the switches have been set for the download of images and gifs, the files can be respectively found in the `/images` and `/mp4` folders.
+If the switches are set for the download of images and gifs, the files can be respectively found in the `/images` and `/mp4` folders.
 
 ### Module import
 ```python
->>> from dmarchiver import Crawler
->>> crawler = Crawler('CONVERSATION_ID', 'AUTH_TOKEN')
->>> crawler.crawl()
+>>> from dmarchiver.core import Crawler
+>>> crawler = Crawler()
+>>> crawler.authenticate('username', 'password')
+>>> crawler.crawl('conversation_id')
 ```
 
 ## Development setup
@@ -77,16 +89,6 @@ $ virtualenv venv
 $ source venv/bin/activate # "venv/Scripts/Activate.bat" on Windows
 $ pip install -r requirements.txt
 $ python setup.py install
-```
-
-## Windows binary build
-You can build it yourself with `pyinstaller` or just check out the project releases.
-
-```
-> pip install pyinstaller
-> pyinstaller --onefile dmarchiver\cmdline.py -n dmarchiver.exe
-> cd dist
-> dmarchiver.exe
 ```
 
 ## Troubleshooting
