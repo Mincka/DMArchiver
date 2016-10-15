@@ -46,6 +46,11 @@ $ pip3 install dmarchiver
 $ dmarchiver
 ```
 
+## Upgrade
+```
+$ pip install dmarchiver --upgrade
+```
+
 ## Usage
 
 ### Command line tool
