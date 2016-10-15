@@ -76,17 +76,17 @@ $ dmarchiver --help
 
 ### Examples
 
-#### Archive all conversations with images and GIFs:
-`$ dmarchiver -di -dg`
+#### Archive all conversations with images:
+`$ dmarchiver -di`
 
 The script output will be the `645754097571131337.txt` file with the conversation formatted in an _IRC-like_ style.
 
 The images and GIFs files can be respectively found in the `645754097571131337/images` and `645754097571131337/mp4` folders.
 
-#### Archive a specific conversation without images and GIFs:
+#### Archive a specific conversation (only text):
 To retrieve only one conversation with the ID `645754097571131337`:
 
-`$ dmarchiver -id "645754097571131337" -di -dg`
+`$ dmarchiver -id "645754097571131337"`
 
 The script output will be the `645754097571131337.txt` file with the conversation formatted in an _IRC-like_ style.
 
