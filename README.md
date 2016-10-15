@@ -15,7 +15,7 @@ I have made this tool to retrieve all the tweets from my private conversations a
 
 Emoji are currently kept with their description to prevent encoding issues.
 
-This tool is also able to **download all the uploaded images** in their original resolution and, as a bonus, also retrieve the **GIFs** you used in your conversation as MP4 files (the format used by Twitter to optimized them and save space).
+This tool is also able to **download all the uploaded images** in their original resolution and, as a bonus, also retrieve the **GIFs** you used in your conversations as MP4 files (the format used by Twitter to optimized them and save space).
 
 You may have found suggestions to use the Twitter's archive feature to do the same but Direct Messages are not included in the generated archive.
 
@@ -131,6 +131,14 @@ You can build it with `pyinstaller`.
 You may encounter building issues with the `lxml` library on Windows. The most simple and straightforward fix is to download and install a precompiled binary from [this site](http://www.lfd.uci.edu/~gohlke/pythonlibs/#lxml) and install the package locally:
 
 `$ pip install lxml-3.6.4-cp35-cp35m-win_amd64.whl`
+
+## FAQ
+
+### What happens to my password and my messages? Are they sent to a third-party service?
+Not at all. Everything happens on your computer. Your username and your password are only sent once to Twitter using a secured connection. Your messages are downloaded from your connection, and are written on your computer at the end of the script execution, so are the images and the GIFs if you chose to download them.
+
+### I received an e-mail from Twitter saying a suspicious connection occured on Twitter, should I be worried about it?
+Not at all. The tool simulates a Firefox browser on Windows 10. Consequently, if you do not use usually this configuration, Twitter warns you about this. You can safely ignore this message if you received it at the same time the tool was used.
 
 ## License
 
