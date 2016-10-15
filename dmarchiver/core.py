@@ -64,14 +64,15 @@ class Conversation(object):
                 file_buffer += '[{0}] <{1}> '.format(
                     irc_formatted_date, tweet[1].author)
                 for element in tweet[1].elements:
-                    file_buffer += '{0} '.format(element)
+                    # Convert all '\n' of the buffer to os.linesep
+                    # to handle tweets on multiple lines
+                    file_buffer += '{0} '.format(element).replace('\n', os.linesep)
                 file_buffer += '{0}'.format(os.linesep)
             elif type(tweet[1]).__name__ == 'DMConversationEntry':
                 file_buffer += '[DMConversationEntry] {0}{1}'.format(
                     tweet[1], os.linesep)
 
-        # Convert all '\n' of the buffer to os.linesep
-        file_buffer = file_buffer.replace('\n', os.linesep)
+
 
         with open(filename, "wb") as myfile:
             myfile.write(file_buffer.encode('UTF-8'))
