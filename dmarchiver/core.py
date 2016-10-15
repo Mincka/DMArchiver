@@ -20,13 +20,9 @@ from lxml.cssselect import CSSSelector
 import os
 import re
 import requests
-from requests.packages.urllib3.exceptions import InsecureRequestWarning
 import shutil
 
 __all__ = ['Crawler']
-
-requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
-
 
 class Conversation(object):
     conversation_id = None
@@ -186,8 +182,7 @@ class Crawler(object):
 
         r = self._session.get(
             login_url,
-            headers=self._http_headers,
-            verify=False)
+            headers=self._http_headers)
 
         document = lxml.html.document_fromstring(r.text)
         authenticity_token = document.xpath(
@@ -200,8 +195,7 @@ class Crawler(object):
         r = self._session.post(
             sessions_url,
             headers=self._ajax_headers,
-            params=payload,
-            verify=False)
+            params=payload)
         cookies = requests.utils.dict_from_cookiejar(self._session.cookies)
         if 'auth_token' in cookies:
             print('Authentication succeedeed.')
@@ -213,8 +207,7 @@ class Crawler(object):
 
         r = self._session.get(
             messages_url,
-            headers=self._ajax_headers,
-            verify=False)
+            headers=self._ajax_headers)
 
         json = r.json()
         return json['inner']['threads']
@@ -295,10 +288,11 @@ class Crawler(object):
                 media_filename_re[0][0] + '-' + media_filename_re[0][1]
 
             if download_images:
-                r = self._session.get(media_url, verify=False, stream=True)
+                r = self._session.get(media_url, stream=True)
                 if r.status_code == 200:
-                    os.makedirs('images', exist_ok=True)
-                    with open('images/' + media_filename, 'wb') as f:
+                    os.makedirs(
+                        '{0}/images'.format(self._conversation_id), exist_ok=True)
+                    with open('{0}/images/{1}'.format(self._conversation_id, media_filename), 'wb') as f:
                         r.raw.decode_content = True
                         shutil.copyfileobj(r.raw, f)
         elif len(gif_url) > 0:
@@ -312,10 +306,11 @@ class Crawler(object):
                 0] + '-' + media_filename_re[0][1]
 
             if download_gif:
-                r = self._session.get(media_url, verify=False, stream=True)
+                r = self._session.get(media_url, stream=True)
                 if r.status_code == 200:
-                    os.makedirs('mp4', exist_ok=True)
-                    with open('mp4/' + media_filename, 'wb') as f:
+                    os.makedirs(
+                        '{0}/mp4'.format(self._conversation_id), exist_ok=True)
+                    with open('{0}/mp4/{1}'.format(self._conversation_id, media_filename), 'wb') as f:
                         r.raw.decode_content = True
                         shutil.copyfileobj(r.raw, f)
         elif len(video_url) > 0:
@@ -420,6 +415,7 @@ class Crawler(object):
             download_images=False,
             download_gif=False):
         print('Starting crawl of \'{0}\''.format(conversation_id))
+        self._conversation_id = conversation_id
         conversation = Conversation(conversation_id)
         conversation_url = self._twitter_base_url + '/messages/with/conversation'
         payload = {'id': conversation_id}
@@ -429,8 +425,7 @@ class Crawler(object):
             r = self._session.get(
                 conversation_url,
                 headers=self._ajax_headers,
-                params=payload,
-                verify=False)
+                params=payload)
 
             json = r.json()
 

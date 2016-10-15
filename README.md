@@ -4,7 +4,7 @@ A tool to archive **all** the direct messages from your private conversations on
 ## Introduction
 Have you ever need to retrieve old information from a chat with your friends on Twitter? Or maybe you would just like to backup all these cheerful moments and keep them safe.
 
-I have made this tool to retrieve all the tweets from my private conversations and transform them in an _IRC-like_ log for archiving. Emoji are currently kept with their description to prevent encoding issues.
+I have made this tool to retrieve all the tweets from my private conversations and transform them in an _IRC-like_ log for archiving. 
 
 **Output sample:**
 ```
@@ -13,11 +13,18 @@ I have made this tool to retrieve all the tweets from my private conversations a
 [2016-09-07 10:38:10] <Steve> You guys are ridiculous! [Face with tears of joy]
 ```
 
+Emoji are currently kept with their description to prevent encoding issues.
+
 This tool is also able to **download all the uploaded images** in their original resolution and, as a bonus, also retrieve the **GIFs** you used in your conversation as MP4 files (the format used by Twitter to optimized them and save space).
 
-This tool does not leverage the Twitter API because of its very restrictive limitations in regard of the handling of the Direct Messages. Actually, it is currently possible to retrieve only the latest 200 messages of a private conversation.
+You may have found suggestions to use the Twitter's archive feature to do the same but Direct Messages are not included in the generated archive.
 
-Because it is still possible to retrieve the older messages from a Direct Conversation by scrolling up, this script only simulates this behavior to retrieve automatically the messages.
+The script does not leverage the Twitter API because of its very restrictive limitations in regard of the handling of the Direct Messages. Actually, it is currently possible to retrieve only the latest 200 messages of a private conversation.
+
+Because it is still possible to retrieve older messages from a Conversation by scrolling up, this script only simulates this behavior to automatically get the messages.
+
+**Disclaimer:**
+Using this tool will only behave like you using the Twitter web site with your browser, so there is nothing illegal to use it to retrieve your own data. However, depending on your conversations' length, it may trigger a lot of requests to the site that could be suspicious for Twitter. No one are reported issues upon now but use it at your own risk.
 
 ## Installation & Quick start
 ### Ubuntu
@@ -28,13 +35,11 @@ $ pip install dmarchiver
 $ dmarchiver
 ```
 ### Windows
-You can build it yourself with `pyinstaller` or just check out the [project releases](https://github.com/Mincka/DMArchiver/releases) for binary builds.
+Download a Windows build from the [project releases](https://github.com/Mincka/DMArchiver/releases).
 
+Then run the tool in a Command Prompt.
 ```
-> pip install pyinstaller
-> pyinstaller --onefile dmarchiver\cmdline.py -n dmarchiver.exe
-> cd dist
-> dmarchiver.exe
+> C:\Temp\DMArchiver.exe
 ```
 
 ### macOS
@@ -69,14 +74,30 @@ $ dmarchiver --help
 	  -dg, --download-gifs  Download GIFs (as MP4)
 ```
 
-### Example
-To retrieve only a conversation with images and GIFs:
+### Examples
+
+#### Archive all conversations with images and GIFs:
+`$ dmarchiver -di -dg`
+
+The script output will be the `645754097571131337.txt` file with the conversation formatted in an _IRC-like_ style.
+
+The images and GIFs files can be respectively found in the `645754097571131337/images` and `645754097571131337/mp4` folders.
+
+#### Archive a specific conversation without images and GIFs:
+To retrieve only one conversation with the ID `645754097571131337`:
 
 `$ dmarchiver -id "645754097571131337" -di -dg`
 
 The script output will be the `645754097571131337.txt` file with the conversation formatted in an _IRC-like_ style.
 
-If the switches are set for the download of images and gifs, the files can be respectively found in the `/images` and `/mp4` folders.
+#### How to get a `conversation_id`?
+
+The `conversation-id` is the identifier of the conversation you want to backup. Here how to find it manually:
+	- Open the _Network_ panel in the _Development Tools_ of your favorite browser.
+	- Open the desired conversation on Twitter and have a look at the requests.
+	- Identify a request with the following arguments:
+	`https://twitter.com/messages/with/conversation?id=645754097571131337&max_entry_id=78473919348771337`
+	- Use the `id` value as your `conversation-id`. This identifier can contain special characters such as '-'.
 
 ### Module import
 ```python
@@ -94,6 +115,16 @@ $ virtualenv venv
 $ source venv/bin/activate # "venv/Scripts/Activate.bat" on Windows
 $ pip install -r requirements.txt
 $ python setup.py install
+```
+
+### Windows binary build
+You can build it with `pyinstaller`.
+
+```
+> pip install pyinstaller
+> pyinstaller --onefile dmarchiver\cmdline.py -n dmarchiver.exe
+> cd dist
+> dmarchiver.exe
 ```
 
 ## Troubleshooting
