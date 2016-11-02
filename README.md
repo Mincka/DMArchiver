@@ -28,7 +28,7 @@ Using this tool will only behave like you using the Twitter web site with your b
 
 ## Installation & Quick start
 ### Ubuntu
-Python 3 should be already there.
+
 
 ```
 $ pip install dmarchiver
@@ -44,13 +44,11 @@ Then run the tool in a Command Prompt.
 
 ### Mac OS X / macOS
 
-_Prerequisites_:
-
 To build and run the package, you need to have **Xcode** (≈ 130 MB), **Homebrew** and **Python 3** (≈ 20 MB):
 
 ```
-$ /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 $ xcode-select --install
+$ /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 $ brew install python3
 ```
 
