@@ -372,6 +372,7 @@ class Crawler(object):
 
         for tweet_id in orderedTweets:
             dm_author = ''
+            message = ''
             irc_formatted_date = ''
             dm_element_text = ''
             value = tweets[tweet_id]
@@ -380,60 +381,64 @@ class Crawler(object):
             if platform == "darwin":
                 # Clear alt attributes of emojis
                 value = re.sub(r'(class="Emoji.*?)alt=".*?"', r'\g<1> alt=""', value)
-            
-            document = lxml.html.fragment_fromstring(value)
+            try:
+                document = lxml.html.fragment_fromstring(value)
 
-            dm_container = document.cssselect('div.DirectMessage-container')
+                dm_container = document.cssselect('div.DirectMessage-container')
 
-            # Generic messages such as "X has join the group" or "The group has
-            # been renamed"
-            dm_conversation_entry = document.cssselect(
-                'div.DMConversationEntry')
+                # Generic messages such as "X has join the group" or "The group has
+                # been renamed"
+                dm_conversation_entry = document.cssselect(
+                    'div.DMConversationEntry')
 
-            if len(dm_container) > 0:
-                dm_avatar = dm_container[0].cssselect('img.DMAvatar-image')[0]
-                dm_author = dm_avatar.get('alt')
+                if len(dm_container) > 0:
+                    dm_avatar = dm_container[0].cssselect('img.DMAvatar-image')[0]
+                    dm_author = dm_avatar.get('alt')
 
-                # print(dm_author)
+                    # print(dm_author)
 
-                dm_footer = document.cssselect('div.DirectMessage-footer')
-                time_stamp = dm_footer[0].cssselect('span._timestamp')[
-                    0].get('data-time')
+                    dm_footer = document.cssselect('div.DirectMessage-footer')
+                    time_stamp = dm_footer[0].cssselect('span._timestamp')[
+                        0].get('data-time')
 
-                # DirectMessage-text, div.DirectMessage-media,
-                # div.DirectMessage-tweet_id, div.DirectMessage-card...
-                dm_elements = document.cssselect(
-                    'div.DirectMessage-message > div[class^="DirectMessage-"], div.DirectMessage-message > div[class*=" DirectMessage-"]')
+                    # DirectMessage-text, div.DirectMessage-media,
+                    # div.DirectMessage-tweet_id, div.DirectMessage-card...
+                    dm_elements = document.cssselect(
+                        'div.DirectMessage-message > div[class^="DirectMessage-"], div.DirectMessage-message > div[class*=" DirectMessage-"]')
 
-                message = DirectMessage(tweet_id, time_stamp, dm_author)
+                    message = DirectMessage(tweet_id, time_stamp, dm_author)
 
-                # Required array cleanup
-                message.elements = []
+                    # Required array cleanup
+                    message.elements = []
 
-                for dm_element in dm_elements:
-                    dm_element_type = dm_element.get('class')
-                    if 'DirectMessage-text' in dm_element_type:
-                        element_object = self._parse_dm_text(dm_element)
-                        message.elements.append(element_object)
-                    elif dm_element_type == 'DirectMessage-media':
-                        element_object = self._parse_dm_media(
-                            dm_element, tweet_id, download_images, download_gif)
-                        message.elements.append(element_object)
-                    elif dm_element_type == 'DirectMessage-tweet':
-                        element_object = self._parse_dm_tweet(dm_element)
-                        message.elements.append(element_object)
-                    elif dm_element_type == 'DirectMessage-card':
-                        element_object = self._parse_dm_card(dm_element)
-                        message.elements.append(element_object)
-                    else:
-                        print('Unknown element type')
+                    for dm_element in dm_elements:
+                        dm_element_type = dm_element.get('class')
+                        if 'DirectMessage-text' in dm_element_type:
+                            element_object = self._parse_dm_text(dm_element)
+                            message.elements.append(element_object)
+                        elif dm_element_type == 'DirectMessage-media':
+                            element_object = self._parse_dm_media(
+                                dm_element, tweet_id, download_images, download_gif)
+                            message.elements.append(element_object)
+                        elif dm_element_type == 'DirectMessage-tweet':
+                            element_object = self._parse_dm_tweet(dm_element)
+                            message.elements.append(element_object)
+                        elif dm_element_type == 'DirectMessage-card':
+                            element_object = self._parse_dm_card(dm_element)
+                            message.elements.append(element_object)
+                        else:
+                            print('Unknown element type')
 
-            elif len(dm_conversation_entry) > 0:
-                dm_element_text = dm_conversation_entry[0].text.strip()
-                message = DMConversationEntry(tweet_id, dm_element_text)
+                elif len(dm_conversation_entry) > 0:
+                    dm_element_text = dm_conversation_entry[0].text.strip()
+                    message = DMConversationEntry(tweet_id, dm_element_text)
+            except:
+                print('Unexpected error for tweet \'{0}\', but still I continue.'.format(tweet_id))
+                message = DMConversationEntry(tweet_id, '[ParseError] Parsing of tweet \'{0}\' failed. Raw HTML: {1}'.format(tweet_id, value))
 
             if message is not None:
                 conversation_set[tweet_id] = message
+            
         return conversation_set
 
     def crawl(
