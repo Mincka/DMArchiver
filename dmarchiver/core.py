@@ -46,7 +46,7 @@ class Conversation(object):
 
         for tweet in items:
             if type(tweet[1]).__name__ == 'DirectMessage':
-                irc_formatted_date = datetime.datetime.utcfromtimestamp(
+                irc_formatted_date = datetime.datetime.fromtimestamp(
                     int(tweet[1].timestamp)).strftime('%Y-%m-%d %H:%M:%S')
                 print(
                     '[{0}] <{1}> '.format(
@@ -67,7 +67,7 @@ class Conversation(object):
 
         for tweet in items:
             if type(tweet[1]).__name__ == 'DirectMessage':
-                irc_formatted_date = datetime.datetime.utcfromtimestamp(
+                irc_formatted_date = datetime.datetime.fromtimestamp(
                     int(tweet[1].timestamp)).strftime('%Y-%m-%d %H:%M:%S')
                 file_buffer += '[{0}] <{1}> '.format(
                     irc_formatted_date, tweet[1].author)

@@ -42,13 +42,20 @@ Then run the tool in a Command Prompt.
 > C:\Temp\DMArchiver.exe
 ```
 
-### macOS
-You may need to install Python 3.
+### Mac OS X / macOS
 
+_Prerequisites_:
+Depending on your current setup, you may need to install **Python 3** with `brew install python3` (≈ 20 MB), and **Xcode** with `xcode-select --install` (≈ 130 MB) to compile lxml for pip.
+
+Once your environment is setup properly, you can install and run the tool:
 ```
-$ brew install python3
 $ pip3 install dmarchiver
 $ dmarchiver
+```
+
+If Python bin path in not in your environment PATH variable, the program will not be found. Just run it with the complete path:
+```
+$ /Library/Frameworks/Python.framework/Versions/3.5/bin/dmarchiver
 ```
 
 ## Upgrade

@@ -93,6 +93,7 @@ Scripts/
 
 # Build / Install / Tests
 pip*
+*.stackdump
 *.whl
 tweets.txt
 files.txt
