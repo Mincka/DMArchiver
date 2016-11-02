@@ -21,6 +21,7 @@ import os
 import re
 import requests
 import shutil
+from sys import platform
 
 __all__ = ['Crawler']
 
@@ -374,6 +375,12 @@ class Crawler(object):
             irc_formatted_date = ''
             dm_element_text = ''
             value = tweets[tweet_id]
+
+            # Mac OS lxml bug workaround
+            if platform == "darwin":
+                # Clear alt attributes of emojis
+                value = re.sub(r'(class="Emoji.*?)alt=".*?"', r'\g<1> alt=""', value)
+            
             document = lxml.html.fragment_fromstring(value)
 
             dm_container = document.cssselect('div.DirectMessage-container')

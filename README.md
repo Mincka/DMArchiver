@@ -46,7 +46,13 @@ Then run the tool in a Command Prompt.
 
 _Prerequisites_:
 
-Depending on your current setup, you may need to install **Python 3** with `brew install python3` (≈ 20 MB), and **Xcode** with `xcode-select --install` (≈ 130 MB) to compile lxml for pip.
+To build and run the package, you need to have **Xcode** (≈ 130 MB), **Homebrew** and **Python 3** (≈ 20 MB):
+
+```
+$ /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+$ xcode-select --install
+$ brew install python3
+```
 
 Once your environment is setup properly, you can install and run the tool:
 ```
@@ -54,7 +60,7 @@ $ pip3 install dmarchiver
 $ dmarchiver
 ```
 
-If Python bin path in not in your environment PATH variable, the program will not be found. Just run it with the complete path:
+If Python bin path in not in your environment PATH variable, the program will not be found. Just run it with the complete path (location may vary...):
 ```
 $ /Library/Frameworks/Python.framework/Versions/3.5/bin/dmarchiver
 ```
