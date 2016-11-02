@@ -45,6 +45,7 @@ Then run the tool in a Command Prompt.
 ### Mac OS X / macOS
 
 _Prerequisites_:
+
 Depending on your current setup, you may need to install **Python 3** with `brew install python3` (≈ 20 MB), and **Xcode** with `xcode-select --install` (≈ 130 MB) to compile lxml for pip.
 
 Once your environment is setup properly, you can install and run the tool:
@@ -100,11 +101,11 @@ The script output will be the `645754097571131337.txt` file with the conversatio
 #### How to get a `conversation_id`?
 
 The `conversation-id` is the identifier of the conversation you want to backup. Here how to find it manually:
-	- Open the _Network_ panel in the _Development Tools_ of your favorite browser.
-	- Open the desired conversation on Twitter and have a look at the requests.
-	- Identify a request with the following arguments:
-	`https://twitter.com/messages/with/conversation?id=645754097571131337&max_entry_id=78473919348771337`
-	- Use the `id` value as your `conversation-id`. This identifier can contain special characters such as '-'.
+- Open the _Network_ panel in the _Development Tools_ of your favorite browser.
+- Open the desired conversation on Twitter and have a look at the requests.
+- Identify a request with the following arguments:
+`https://twitter.com/messages/with/conversation?id=645754097571131337&max_entry_id=78473919348771337`
+- Use the `id` value as your `conversation-id`. This identifier can contain special characters such as '-'.
 
 ### Module import
 ```python
