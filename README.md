@@ -64,8 +64,9 @@ $ /Library/Frameworks/Python.framework/Versions/3.5/bin/dmarchiver
 ```
 
 ## Upgrade
+
 ```
-$ pip install dmarchiver --upgrade
+$ pip3 install dmarchiver --upgrade
 ```
 
 ## Usage
