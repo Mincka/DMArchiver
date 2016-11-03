@@ -5,4 +5,4 @@
     without having to deal with the API limitations.
 """
  
-__version__ = "0.0.10"
+__version__ = "0.1.0"

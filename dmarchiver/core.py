@@ -379,8 +379,14 @@ class Crawler(object):
 
             # Mac OS lxml bug workaround
             if platform == "darwin":
-                # Clear alt attributes of emojis
-                value = re.sub(r'(class="Emoji.*?)alt=".*?"', r'\g<1> alt=""', value)
+                # Replace four-byte encoded characters by WHITE SQUARE (U+25A1)
+                try:
+                    # UCS-4
+                    highpoints = re.compile(u'[\U00010000-\U0010ffff]')
+                except re.error:
+                    # UCS-2
+                    highpoints = re.compile(u'[\uD800-\uDBFF][\uDC00-\uDFFF]')
+                value = highpoints.sub(u'\u25A1', value)
             try:
                 document = lxml.html.fragment_fromstring(value)
 
@@ -433,7 +439,7 @@ class Crawler(object):
                     dm_element_text = dm_conversation_entry[0].text.strip()
                     message = DMConversationEntry(tweet_id, dm_element_text)
             except:
-                print('Unexpected error for tweet \'{0}\', but still I continue.'.format(tweet_id))
+                print('Unexpected error for tweet \'{0}\', raw HTML will be used for the tweet.'.format(tweet_id))
                 message = DMConversationEntry(tweet_id, '[ParseError] Parsing of tweet \'{0}\' failed. Raw HTML: {1}'.format(tweet_id, value))
 
             if message is not None:
