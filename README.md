@@ -105,12 +105,21 @@ The script output will be the `645754097571131337.txt` file with the conversatio
 
 #### How to get a `conversation_id`?
 
-The `conversation-id` is the identifier of the conversation you want to backup. Here how to find it manually:
-- Open the _Network_ panel in the _Development Tools_ of your favorite browser.
-- Open the desired conversation on Twitter and have a look at the requests.
-- Identify a request with the following arguments:
-`https://twitter.com/messages/with/conversation?id=645754097571131337&max_entry_id=78473919348771337`
-- Use the `id` value as your `conversation-id`. This identifier can contain special characters such as '-'.
+The `conversation-id` is the identifier of the conversation you want to backup.
+
+- Click on the "Messages" button on Twitter.
+- Press the F12 key and go to the "Console" tab.
+- Past and execute the following JavaScript code to show thread IDs next to the conversation titles:
+
+```javascript
+conversations = document.getElementsByClassName('DMInbox-conversationItem')
+
+for (var i = 0; i < conversations.length; i++) {
+  threadId = conversations[i].getElementsByClassName('DMInboxItem')[0].getAttribute('data-thread-id');
+  fullName = conversations[i].getElementsByClassName('fullname')[0];
+  fullName.innerHTML = fullName.innerHTML + ' (' + threadId + ')';
+}
+```
 
 ### Module import
 ```python
