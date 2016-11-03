@@ -140,7 +140,7 @@ You can build it with `pyinstaller`.
 ```
 
 ## Troubleshooting
-You may encounter building issues with the `lxml` library on Windows. The most simple and straightforward fix is to download and install a precompiled binary from [this site](http://www.lfd.uci.edu/~gohlke/pythonlibs/#lxml) and install the package locally:
+You may encounter building issues with the `lxml` library on Windows (`error: Unable to find vcvarsall.bat`). The most simple and straightforward fix is to download and install a precompiled binary from [this site](http://www.lfd.uci.edu/~gohlke/pythonlibs/#lxml) and install the package locally:
 
 `$ pip install lxml-3.6.4-cp35-cp35m-win_amd64.whl`
 
