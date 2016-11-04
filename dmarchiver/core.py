@@ -29,11 +29,15 @@ __all__ = ['Crawler']
 
 
 def expand_url(url):
+    """Return the expanded URL behind a short link"""
+
     r = requests.get(url, allow_redirects=False)
     return r.headers['location']
 
 
 class Conversation(object):
+    """This class is a representation of a complete conversation"""
+
     conversation_id = None
     tweets = collections.OrderedDict()
 
@@ -42,6 +46,8 @@ class Conversation(object):
         self.conversation_id = conversation_id
 
     def print_conversation(self):
+        """Print the conversation in the console"""
+
         items = list(self.tweets.items())
         items.reverse()
 
@@ -61,6 +67,8 @@ class Conversation(object):
                 print('[DMConversationEntry] {0}\r'.format(tweet[1]))
 
     def write_conversation(self, filename):
+        """Write the content of the conversation to a file"""
+
         file_buffer = ''
 
         items = list(self.tweets.items())
@@ -92,6 +100,12 @@ class Conversation(object):
 
 
 class DMConversationEntry(object):
+    """This class is a representation of a DMConversationEntry.
+
+    It could be a when a new user join the group, when
+    the group is renamed or the picture updated.
+    """
+
     tweet_id = ''
     _text = ''
 
@@ -104,6 +118,7 @@ class DMConversationEntry(object):
 
 
 class DirectMessage(object):
+    """This class is a representation of a Direct Message (a tweet)"""
 
     tweet_id = ''
     timestamp = ''
@@ -117,6 +132,10 @@ class DirectMessage(object):
 
 
 class DirectMessageText(object):
+    """ This class is a representation of simple text message.
+    This is an "element" of the Direct Message.
+    """
+
     _text = ''
 
     def __init__(self, text):
@@ -127,6 +146,10 @@ class DirectMessageText(object):
 
 
 class DirectMessageTweet(object):
+    """ This class is a representation of a quoted tweet.
+    This is an "element" of the Direct Message.
+    """
+
     _tweet_url = ''
 
     def __init__(self, tweet_url):
@@ -137,6 +160,11 @@ class DirectMessageTweet(object):
 
 
 class DirectMessageCard(object):
+    """ This class is a representation of a card.
+    A card is a preview of a posted link.
+    This is an "element" of the Direct Message.
+    """
+
     _card_url = ''
     _card_name = ''
     _expanded_url = ''
@@ -154,6 +182,8 @@ class DirectMessageCard(object):
 
 
 class MediaType(Enum):
+    """ This class is a representation of the possible media types."""
+
     image = 1
     gif = 2
     video = 3
@@ -161,6 +191,10 @@ class MediaType(Enum):
 
 
 class DirectMessageMedia(object):
+    """ This class is a representation of a embedded media.
+    This is an "element" of the Direct Message.
+    """
+
     _media_preview_url = ''
     _media_url = ''
     _media_type = ''
@@ -187,6 +221,11 @@ class DirectMessageMedia(object):
 
 
 class Crawler(object):
+    """ This class is a main component of the tool.
+    It allows to create an authentication session,
+    retrieve the conversation list and loop to gather all the tweets.
+    """
+
     _twitter_base_url = 'https://twitter.com'
     _http_headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64; rv:47.0) Gecko/20100101 Firefox/47.0'}
