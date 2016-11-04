@@ -76,6 +76,7 @@ $ dmarchiver --help
 	  -di, --download-images
 	                        Download images
 	  -dg, --download-gifs  Download GIFs (as MP4)
+      -r, --raw-output  Write the raw HTML to a file
 ```
 
 ### Examples

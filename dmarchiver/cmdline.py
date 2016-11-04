@@ -13,6 +13,7 @@
       -di, --download-images
                             Download images
       -dg, --download-gifs  Download GIFs (as MP4)
+      -r, --raw-output  Write the raw HTML to a file
 """
 
 import argparse
@@ -35,7 +36,12 @@ def main():
         "--download-gifs",
         help="Download GIFs (as MP4)",
         action="store_true")
-
+    parser.add_argument(
+        "-r",
+        "--raw-output",
+        help="Write the raw HTML to a file",
+        action="store_true")
+        
     args = parser.parse_args()
 
     username = input('Enter your username or email: ')
@@ -59,12 +65,12 @@ def main():
         crawler.crawl(
             conversation_id,
             args.download_images,
-            args.download_gifs)
+            args.download_gifs, args.raw_output)
     else:
         print('Conversation ID not specified. Retrieving all the threads.')
         threads = crawler.get_threads()
         for thread_id in threads:
-            crawler.crawl(thread_id, args.download_images, args.download_gifs)
+            crawler.crawl(thread_id, args.download_images, args.download_gifs, args.raw_output)
 
 if __name__ == "__main__":
     main()

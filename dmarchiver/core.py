@@ -490,7 +490,15 @@ class Crawler(object):
             self,
             conversation_id,
             download_images=False,
-            download_gif=False):
+            download_gif=False,
+            raw_output=False):
+
+        raw_output_file = None
+
+        if raw_output:
+            raw_output_file = open(
+                '{0}-raw.txt'.format(conversation_id), 'wb')
+
         print('Starting crawl of \'{0}\''.format(conversation_id))
         self._conversation_id = conversation_id
         conversation = Conversation(conversation_id)
@@ -515,6 +523,11 @@ class Crawler(object):
 
             tweets = json['items']
 
+            if raw_output:
+                orderedTweets = sorted(tweets, reverse=True)
+                for tweet_id in orderedTweets:
+                    raw_output_file.write(tweets[tweet_id].encode('UTF-8'))
+
             # Get tweets for the current request
             conversation_set = self._process_tweets(
                 tweets, download_images, download_gif)
@@ -525,6 +538,9 @@ class Crawler(object):
                 conversation.tweets[tweet_id] = conversation_set[tweet_id]
                 print('Processed tweets: {0}\r'.format(
                     processed_tweet_counter), end='')
+
+        if raw_output:
+            raw_output_file.close()
 
         print('Total processed tweets: {0}'.format(processed_tweet_counter))
 
