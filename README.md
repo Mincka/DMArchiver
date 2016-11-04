@@ -27,14 +27,15 @@ Because it is still possible to retrieve older messages from a Conversation by s
 Using this tool will only behave like you using the Twitter web site with your browser, so there is nothing illegal to use it to retrieve your own data. However, depending on your conversations' length, it may trigger a lot of requests to the site that could be suspicious for Twitter. No one are reported issues upon now but use it at your own risk.
 
 ## Installation & Quick start
-### Ubuntu
 
+### Ubuntu
 
 ```
 $ pip install dmarchiver
 $ dmarchiver
 ```
 ### Windows
+
 Download a Windows build from the [project releases](https://github.com/Mincka/DMArchiver/releases).
 
 Then run the tool in a Command Prompt.
@@ -44,26 +45,16 @@ Then run the tool in a Command Prompt.
 
 ### Mac OS X / macOS
 
-To build and run the package, you need to have **Xcode** (≈ 130 MB), **Homebrew** and **Python 3** (≈ 20 MB):
+Download a macOS build from the [project releases](https://github.com/Mincka/DMArchiver/releases).
 
+Then run the tool in a Terminal.
 ```
-$ xcode-select --install
-$ /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
-$ brew install python3
-```
-
-Once your environment is setup properly, you can install and run the tool:
-```
-$ pip3 install dmarchiver
-$ dmarchiver
+$ ./dmarchiver
 ```
 
-If Python bin path in not in your environment PATH variable, the program will not be found. Just run it with the complete path (location may vary...):
-```
-$ /Library/Frameworks/Python.framework/Versions/3.5/bin/dmarchiver
-```
+Installation using pip is also possible (cf. instructions below).
 
-## Upgrade
+## Upgrade with pip
 
 ```
 $ pip3 install dmarchiver --upgrade
@@ -129,14 +120,44 @@ for (var i = 0; i < conversations.length; i++) {
 >>> crawler.crawl('conversation_id')
 ```
 
-## Development setup
+## Development setup for Ubuntu / Windows
 ```shell
 $ git clone https://github.com/Mincka/DMArchiver.git
-$ cd dmarchiver
+$ cd DMArchiver
 $ virtualenv venv
 $ source venv/bin/activate # "venv/Scripts/Activate.bat" on Windows
 $ pip install -r requirements.txt
 $ python setup.py install
+```
+
+## Installation with pip and binary build on Mac OS X / macOS
+
+To build and run the package, you need to have **Xcode** (≈ 130 MB), **Homebrew** and **Python 3** (≈ 20 MB):
+
+```
+$ xcode-select --install
+$ /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+$ brew install python3
+```
+
+Once your environment is setup properly, you can install and run the tool:
+```
+$ pip3 install dmarchiver
+$ dmarchiver
+```
+
+If Python bin path in not in your environment PATH variable, the program will not be found. Just run it with the complete path (location may vary...):
+```
+$ /Library/Frameworks/Python.framework/Versions/3.5/bin/dmarchiver
+```
+
+You can build it with `pyinstaller`
+
+```
+$ pip3 install pyinstaller
+$ pyinstaller --onefile dmarchiver\cmdline.py -n dmarchiver
+$ cd dist
+$ ./dmarchiver
 ```
 
 ### Windows binary build
