@@ -400,7 +400,6 @@ class Crawler(object):
 
     def _process_tweets(self, tweets, download_images, download_gif):
         conversation_set = collections.OrderedDict()
-
         orderedTweets = sorted(tweets, reverse=True)
 
         # DirectMessage-message
@@ -429,7 +428,8 @@ class Crawler(object):
             try:
                 document = lxml.html.fragment_fromstring(value)
 
-                dm_container = document.cssselect('div.DirectMessage-container')
+                dm_container = document.cssselect(
+                    'div.DirectMessage-container')
 
                 # Generic messages such as "X has join the group" or "The group has
                 # been renamed"
@@ -437,7 +437,8 @@ class Crawler(object):
                     'div.DMConversationEntry')
 
                 if len(dm_container) > 0:
-                    dm_avatar = dm_container[0].cssselect('img.DMAvatar-image')[0]
+                    dm_avatar = dm_container[0].cssselect(
+                        'img.DMAvatar-image')[0]
                     dm_author = dm_avatar.get('alt')
 
                     # print(dm_author)
@@ -478,12 +479,15 @@ class Crawler(object):
                     dm_element_text = dm_conversation_entry[0].text.strip()
                     message = DMConversationEntry(tweet_id, dm_element_text)
             except:
-                print('Unexpected error for tweet \'{0}\', raw HTML will be used for the tweet.'.format(tweet_id))
-                message = DMConversationEntry(tweet_id, '[ParseError] Parsing of tweet \'{0}\' failed. Raw HTML: {1}'.format(tweet_id, value))
+                print(
+                    'Unexpected error for tweet \'{0}\', raw HTML will be used for the tweet.'.format(tweet_id))
+                message = DMConversationEntry(
+                    tweet_id, '[ParseError] Parsing of tweet \'{0}\' failed. Raw HTML: {1}'.format(
+                        tweet_id, value))
 
             if message is not None:
                 conversation_set[tweet_id] = message
-            
+
         return conversation_set
 
     def crawl(
@@ -500,6 +504,7 @@ class Crawler(object):
                 '{0}-raw.txt'.format(conversation_id), 'wb')
 
         print('Starting crawl of \'{0}\''.format(conversation_id))
+
         self._conversation_id = conversation_id
         conversation = Conversation(conversation_id)
         conversation_url = self._twitter_base_url + '/messages/with/conversation'
