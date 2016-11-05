@@ -28,12 +28,6 @@ Using this tool will only behave like you using the Twitter web site with your b
 
 ## Installation & Quick start
 
-### Ubuntu
-
-```
-$ pip install dmarchiver
-$ dmarchiver
-```
 ### Windows
 
 Download a Windows build from the [project releases](https://github.com/Mincka/DMArchiver/releases).
@@ -52,11 +46,18 @@ Then run the tool in a Terminal.
 $ ./dmarchiver
 ```
 
-Installation using pip is also possible (cf. instructions below).
-
-## Upgrade with pip
+### Ubuntu
 
 ```
+$ pip3 install dmarchiver
+$ dmarchiver
+```
+
+### Installation & upgrade with pip (any platform)
+
+```
+$ pip3 install dmarchiver
+$ dmarchiver
 $ pip3 install dmarchiver --upgrade
 ```
 
@@ -88,7 +89,7 @@ The script output will be the `645754097571131337.txt` file with the conversatio
 
 The images and GIFs files can be respectively found in the `645754097571131337/images` and `645754097571131337/mp4` folders.
 
-#### Archive a specific conversation (only text):
+#### Archive a specific conversation:
 To retrieve only one conversation with the ID `645754097571131337`:
 
 `$ dmarchiver -id "645754097571131337"`
@@ -124,19 +125,21 @@ for (var i = 0; i < conversations.length; i++) {
 >>> crawler.crawl('conversation_id')
 ```
 
-## Development setup for Ubuntu / Windows
+## Development
+
+### Ubuntu / Windows
+
 ```shell
 $ git clone https://github.com/Mincka/DMArchiver.git
 $ cd DMArchiver
 $ virtualenv venv
 $ source venv/bin/activate # "venv/Scripts/Activate.bat" on Windows
 $ pip install -r requirements.txt
-$ python setup.py install
 ```
 
-## Installation with pip and binary build on Mac OS X / macOS
+### Mac OS X / macOS
 
-To build and run the package, you need to have **Xcode** (≈ 130 MB), **Homebrew** and **Python 3** (≈ 20 MB):
+To build and run the `pip3` package, you need to have **Xcode** (≈ 130 MB), **Homebrew** and **Python 3** (≈ 20 MB):
 
 ```
 $ xcode-select --install
@@ -144,18 +147,18 @@ $ /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/inst
 $ brew install python3
 ```
 
-Once your environment is setup properly, you can install and run the tool:
+### Binary build with pyinstaller
+
+#### On Windows
+
 ```
-$ pip3 install dmarchiver
-$ dmarchiver
+> pip3 install pyinstaller
+> pyinstaller --onefile dmarchiver\cmdline.py -n dmarchiver.exe
+> cd dist
+> dmarchiver.exe
 ```
 
-If Python bin path in not in your environment PATH variable, the program will not be found. Just run it with the complete path (location may vary...):
-```
-$ /Library/Frameworks/Python.framework/Versions/3.5/bin/dmarchiver
-```
-
-You can build it with `pyinstaller`
+#### On Mac OS / macOS
 
 ```
 $ pip3 install pyinstaller
@@ -164,20 +167,23 @@ $ cd dist
 $ ./dmarchiver
 ```
 
-### Windows binary build
-You can build it with `pyinstaller`.
+## Known issue
 
-```
-> pip install pyinstaller
-> pyinstaller --onefile dmarchiver\cmdline.py -n dmarchiver.exe
-> cd dist
-> dmarchiver.exe
-```
+### Missing emoji support in quoted tweets and usernames (Mac OS X / macOS only)
+There is an issue with the `lxml` build on macOS which prevent the parsing of four-byte encoded characters. Consequently, as a workaround, the script will replace emojis (and other special characters, like '𝜋') in usernames and tweets. See #1 for more information.
 
 ## Troubleshooting
+
+### Error building `lxml`
 You may encounter building issues with the `lxml` library on Windows (`error: Unable to find vcvarsall.bat`). The most simple and straightforward fix is to download and install a precompiled binary from [this site](http://www.lfd.uci.edu/~gohlke/pythonlibs/#lxml) and install the package locally:
 
 `$ pip install lxml-3.6.4-cp35-cp35m-win_amd64.whl`
+
+### `dmarchiver` script not found after `pip3 install`
+If Python bin path in not in your environment PATH variable, the program will not be found. Just run it with the complete path (location may vary...):
+```
+$ /Library/Frameworks/Python.framework/Versions/3.5/bin/dmarchiver
+```
 
 ## FAQ
 
