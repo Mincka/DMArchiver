@@ -76,7 +76,7 @@ $ dmarchiver --help
 	  -di, --download-images
 	                        Download images
 	  -dg, --download-gifs  Download GIFs (as MP4)
-      -r, --raw-output  Write the raw HTML to a file
+      -r, --raw-output      Write the raw HTML to a file
 ```
 
 ### Examples
@@ -97,11 +97,11 @@ The script output will be the `645754097571131337.txt` file with the conversatio
 
 #### How to get a `conversation_id`?
 
-The `conversation-id` is the identifier of the conversation you want to backup.
+The `conversation_id` is the identifier of a specific conversation you want to backup.
 
 - Click on the "Messages" button on Twitter.
-- Press the F12 key and go to the "Console" tab.
-- Past and execute the following JavaScript code to show thread IDs next to the conversation titles:
+- Press the F12 key and go to the "Console" tab of your browser.
+- Past and execute the following JavaScript code to show the IDs next to the conversation titles:
 
 ```javascript
 conversations = document.getElementsByClassName('DMInbox-conversationItem')
@@ -109,7 +109,10 @@ conversations = document.getElementsByClassName('DMInbox-conversationItem')
 for (var i = 0; i < conversations.length; i++) {
   threadId = conversations[i].getElementsByClassName('DMInboxItem')[0].getAttribute('data-thread-id');
   fullName = conversations[i].getElementsByClassName('fullname')[0];
-  fullName.innerHTML = fullName.innerHTML + ' (' + threadId + ')';
+  var p = document.createElement("p");
+  var t = document.createTextNode("The conversation_id for \"" + fullName.innerHTML + "\" is \"" + threadId + "\""); 
+  p.appendChild(t);                                
+  conversations[i].parentNode.insertBefore(p, conversations[i]);
 }
 ```
 
