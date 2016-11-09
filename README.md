@@ -1,3 +1,6 @@
+[![GitHub release](https://img.shields.io/github/release/Mincka/DMArchiver.svg)](https://github.com/Mincka/DMArchiver/releases) [![PyPI](https://img.shields.io/pypi/v/DMArchiver.svg)](https://pypi.python.org/pypi/dmarchiver) [![Github All Releases](https://img.shields.io/github/downloads/Mincka/DMArchiver/total.svg)](https://github.com/Mincka/DMArchiver/releases) 
+
+
 # DMArchiver
 A tool to archive **all** the direct messages from your private conversations on Twitter.
 
@@ -170,7 +173,7 @@ $ ./dmarchiver
 ## Known issue
 
 ### Missing emoji support in quoted tweets and usernames (Mac OS X / macOS only)
-There is an issue with the `lxml` build on macOS which prevent the parsing of four-byte encoded characters. Consequently, as a workaround, the script will replace emojis (and other special characters, like '𝜋') in usernames and tweets. See #1 for more information.
+There is an issue with the `lxml` build on macOS which prevent the parsing of four-byte encoded characters. Consequently, as a workaround, the script will replace emojis (and other special characters, like '𝜋') in usernames and tweets. See [issue #1](https://github.com/Mincka/DMArchiver/issues/1) for more information.
 
 ## Troubleshooting
 
