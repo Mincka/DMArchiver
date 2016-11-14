@@ -18,7 +18,7 @@ I have made this tool to retrieve all the tweets from my private conversations a
 
 Emoji are currently kept with their description to prevent encoding issues.
 
-This tool is also able to **download all the uploaded images** in their original resolution and, as a bonus, also retrieve the **GIFs** you used in your conversations as MP4 files (the format used by Twitter to optimized them and save space).
+This tool is also able to **download all the uploaded images** in their original resolution and, as a bonus, also retrieve the **GIFs** you used in your conversations as MP4 files (the format used by Twitter to optimize them and save space).
 
 You may have found suggestions to use the Twitter's archive feature to do the same but Direct Messages are not included in the generated archive.
 
