@@ -27,7 +27,7 @@ The script does not leverage the Twitter API because of its very restrictive lim
 Because it is still possible to retrieve older messages from a Conversation by scrolling up, this script only simulates this behavior to automatically get the messages.
 
 **Disclaimer:**
-Using this tool will only behave like you using the Twitter web site with your browser, so there is nothing illegal to use it to retrieve your own data. However, depending on your conversations' length, it may trigger a lot of requests to the site that could be suspicious for Twitter. No one have reported issues upon now but use it at your discretion.
+Using this tool will only behave like you using the Twitter web site with your browser, so there is nothing illegal to use it to retrieve your own data. However, depending on your conversations' length, it may trigger a lot of requests to the site that could be suspicious for Twitter. No one has reported issues upon now but use it at your discretion.
 
 ## Installation & Quick start
 
