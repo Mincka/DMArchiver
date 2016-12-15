@@ -187,7 +187,8 @@ class MediaType(Enum):
     image = 1
     gif = 2
     video = 3
-    unknown = 4
+    sticker = 4
+    unknown = 5
 
 
 class DirectMessageMedia(object):
@@ -341,13 +342,22 @@ class Crawler(object):
         gif_url = element.cssselect('div.PlayableMedia--gif')
         video_url = element.cssselect('div.PlayableMedia--video')
         if img_url is not None:
-            media_type = MediaType.image
             media_url = img_url.get('data-full-img')
             media_filename_re = re.findall(tweet_id + '/(.+)/(.+)$', media_url)
-            media_filename = tweet_id + '-' + \
-                media_filename_re[0][0] + '-' + media_filename_re[0][1]
+            media_sticker_filename_re = re.findall('/stickers/stickers/(.+)$', media_url)
 
-            if download_images:
+            if len(media_filename_re) > 0:
+                media_type = MediaType.image
+                media_filename = tweet_id + '-' + \
+                    media_filename_re[0][0] + '-' + media_filename_re[0][1]
+            elif len(media_sticker_filename_re) > 0:
+                # It is a sticker
+                media_type = MediaType.sticker
+                media_filename = 'sticker-' + media_sticker_filename_re[0]
+            else:
+                # Unknown media type
+                print("Unknown media type")
+            if media_filename is not None and download_images:
                 r = self._session.get(media_url, stream=True)
                 if r.status_code == 200:
                     os.makedirs(

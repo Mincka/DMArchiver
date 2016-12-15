@@ -173,7 +173,7 @@ $ ./dmarchiver
 ## Known issue
 
 ### Missing emoji support in quoted tweets and usernames (Mac OS X / macOS only)
-There is an issue with the `lxml` build on macOS which prevent the parsing of four-byte encoded characters. Consequently, as a workaround, the script will replace emojis (and other special characters, like '𝜋') in usernames and tweets. See [issue #1](https://github.com/Mincka/DMArchiver/issues/1) for more information.
+There is an issue with the `lxml` build on macOS which prevent the parsing of four-byte encoded characters. Consequently, as a workaround, the script will replace emojis (and other special characters, like Pi (U+1D70B)) in usernames and tweets. See [issue #1](https://github.com/Mincka/DMArchiver/issues/1) for more information.
 
 ## Troubleshooting
 
