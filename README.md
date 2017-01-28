@@ -44,8 +44,9 @@ Then run the tool in a Command Prompt.
 
 Download a macOS build from the [project releases](https://github.com/Mincka/DMArchiver/releases).
 
-Then run the tool in a Terminal.
+Then run Terminal and execute the following commands:
 ```
+$ cd Downloads
 $ ./dmarchiver
 ```
 
@@ -64,7 +65,7 @@ $ dmarchiver
 $ pip3 install dmarchiver --upgrade
 ```
 
-## Usage
+## Advanced usage
 
 ### Command line tool
 ```
@@ -165,7 +166,7 @@ $ brew install python3
 
 ```
 $ pip3 install pyinstaller
-$ pyinstaller --onefile dmarchiver\cmdline.py -n dmarchiver
+$ pyinstaller --onefile dmarchiver/cmdline.py -n dmarchiver
 $ cd dist
 $ ./dmarchiver
 ```
