@@ -343,7 +343,7 @@ class Crawler(object):
         video_url = element.cssselect('div.PlayableMedia--video')
         if img_url is not None:
             media_url = img_url.get('data-full-img')
-            media_filename_re = re.findall(tweet_id + '/(.+)/(.+)$', media_url)
+            media_filename_re = re.findall('/\d+/(.+)/(.+)$', media_url)
             media_sticker_filename_re = re.findall('/stickers/stickers/(.+)$', media_url)
 
             if len(media_filename_re) > 0:
