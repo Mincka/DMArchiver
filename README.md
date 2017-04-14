@@ -50,6 +50,8 @@ $ cd Downloads
 $ ./dmarchiver
 ```
 
+Note: If you run the tool by clicking on it, the result files will be available in your `/users/username`folder.
+
 ### Ubuntu
 
 ```
