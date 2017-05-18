@@ -31,11 +31,13 @@ Using this tool will only behave like you using the Twitter web site with your b
 
 ## Installation & Quick start
 
+By running the tool without any argument, you will be only prompted for your username and your password. The script will retrieve all the messages, from all the conversations (actually, the 50 latest because of a [bug](https://github.com/Mincka/DMArchiver/issues/8)), without the images or the GIFs.
+
 ### Windows
 
 Download a Windows build from the [project releases](https://github.com/Mincka/DMArchiver/releases).
 
-Then run the tool in a Command Prompt.
+Unzip the archive in a temporary folder and then run the tool in a Command Prompt:
 ```
 > C:\Temp\DMArchiver.exe
 ```
