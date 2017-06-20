@@ -1,8 +1,8 @@
 [![GitHub release](https://img.shields.io/github/release/Mincka/DMArchiver.svg)](https://github.com/Mincka/DMArchiver/releases) [![PyPI](https://img.shields.io/pypi/v/DMArchiver.svg)](https://pypi.python.org/pypi/dmarchiver) [![Github All Releases](https://img.shields.io/github/downloads/Mincka/DMArchiver/total.svg)](https://github.com/Mincka/DMArchiver/releases) 
 
-### Update 2017-06-14 ###
+### Update 2017-06-20 ###
 
-Due to a recent update in Twitter HTML output, the scripts are not working anymore. A fixed release will be provided as soon as possible, c.f. [issue #14](https://github.com/Mincka/DMArchiver/issues/14)
+Due to a recent update in Twitter HTML output, the [scripts were not working properly](https://github.com/Mincka/DMArchiver/issues/14). Fixed releases are [now available](https://github.com/Mincka/DMArchiver/releases/tag/0.1.2). Thanks to @Gorrrg. :)
 
 # DMArchiver
 A tool to archive **all** the direct messages from your private conversations on Twitter.

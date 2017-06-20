@@ -460,7 +460,7 @@ class Crawler(object):
                     # DirectMessage-text, div.DirectMessage-media,
                     # div.DirectMessage-tweet_id, div.DirectMessage-card...
                     dm_elements = document.cssselect(
-                        'div.DirectMessage-message > div[class^="DirectMessage-"], div.DirectMessage-message > div[class*=" DirectMessage-"]')
+                        'div.DirectMessage-contentContainer > div[class^="DirectMessage-"], div.DirectMessage-message > div[class*=" DirectMessage-"]')
 
                     message = DirectMessage(tweet_id, time_stamp, dm_author)
 
