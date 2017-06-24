@@ -29,6 +29,9 @@ The script does not leverage the Twitter API because of its very restrictive lim
 
 Because it is still possible to retrieve older messages from a Conversation by scrolling up, this script only simulates this behavior to automatically get the messages.
 
+**Warning:**
+Because this script leverages an unsupported method to retrieve the tweets, it may break at any time. Indeed, Twitter may change the output code without warning. If you get errors you did not have previously, please check if new releases of the tool are available.
+
 **Disclaimer:**
 Using this tool will only behave like you using the Twitter web site with your browser, so there is nothing illegal to use it to retrieve your own data. However, depending on your conversations' length, it may trigger a lot of requests to the site that could be suspicious for Twitter. No one has reported issues upon now but use it at your discretion.
 
@@ -40,7 +43,7 @@ By running the tool without any argument, you will be only prompted for your use
 
 Download a Windows build from the [project releases](https://github.com/Mincka/DMArchiver/releases).
 
-Unzip the archive in a temporary folder and then run the tool in a Command Prompt:
+Unzip the archive in a temporary folder and double-click the executable or run it in a Command Prompt:
 ```
 > C:\Temp\DMArchiver.exe
 ```
@@ -49,13 +52,13 @@ Unzip the archive in a temporary folder and then run the tool in a Command Promp
 
 Download a macOS build from the [project releases](https://github.com/Mincka/DMArchiver/releases).
 
-Then run Terminal and execute the following commands:
+Then double-click the executable or run Terminal and execute the following commands:
 ```
 $ cd Downloads
 $ ./dmarchiver
 ```
 
-Note: If you run the tool by clicking on it, the result files will be available in your `/users/username`folder.
+Note: If you run the tool by clicking on it, the result files will be available in your `/users/username` folder.
 
 ### Ubuntu
 
@@ -174,6 +177,8 @@ $ brew install python3
 ```
 $ pip3 install pyinstaller
 $ pyinstaller --onefile dmarchiver/cmdline.py -n dmarchiver
+or alternative for macOS Sierra with handling of external imports
+$ /Library/Frameworks/Python.framework/Versions/3.5/bin/pyinstaller --onefile dmarchiver/cmdline.py -n dmarchiver --hidden-import cssselect --hidden-import lxml --hidden-import urllib3 --hidden-import requests --hidden-import queue 
 $ cd dist
 $ ./dmarchiver
 ```
