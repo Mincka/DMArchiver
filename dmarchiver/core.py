@@ -459,27 +459,27 @@ class Crawler(object):
 
                     # DirectMessage-text, div.DirectMessage-media,
                     # div.DirectMessage-tweet_id, div.DirectMessage-card...
+                    # First select is for non-text messages, second one is for text messages, last one is a special case for stickers
                     dm_elements = document.cssselect(
-                        'div.DirectMessage-contentContainer > div[class^="DirectMessage-"], div.DirectMessage-message > div[class*=" DirectMessage-"]')
+                        'div.DirectMessage-message > div.DirectMessage-attachmentContainer > div[class^="DirectMessage-"], div.DirectMessage-message > div.DirectMessage-contentContainer > div[class^="DirectMessage-"], div.DirectMessage-message > div.DirectMessage-media')
 
                     message = DirectMessage(tweet_id, time_stamp, dm_author)
-
+                    
                     # Required array cleanup
                     message.elements = []
-
                     for dm_element in dm_elements:
                         dm_element_type = dm_element.get('class')
                         if 'DirectMessage-text' in dm_element_type:
                             element_object = self._parse_dm_text(dm_element)
                             message.elements.append(element_object)
-                        elif dm_element_type == 'DirectMessage-media':
+                        elif 'DirectMessage-media' in dm_element_type:
                             element_object = self._parse_dm_media(
                                 dm_element, tweet_id, download_images, download_gif)
                             message.elements.append(element_object)
-                        elif dm_element_type == 'DirectMessage-tweet':
+                        elif 'DirectMessage-tweet' in dm_element_type:
                             element_object = self._parse_dm_tweet(dm_element)
                             message.elements.append(element_object)
-                        elif dm_element_type == 'DirectMessage-card':
+                        elif 'DirectMessage-card' in dm_element_type:
                             element_object = self._parse_dm_card(dm_element)
                             message.elements.append(element_object)
                         else:
