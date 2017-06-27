@@ -11,17 +11,15 @@
     >>> crawler.crawl('conversation_id')
 """
 
-import argparse
 import collections
 import datetime
 from enum import Enum
-import lxml.html
-from lxml.cssselect import CSSSelector
 import os
 import re
-import requests
 import shutil
 from sys import platform
+import lxml.html
+import requests
 
 __all__ = ['Crawler']
 
@@ -31,8 +29,8 @@ __all__ = ['Crawler']
 def expand_url(url):
     """Return the expanded URL behind a short link"""
 
-    r = requests.get(url, allow_redirects=False)
-    return r.headers['location']
+    response = requests.get(url, allow_redirects=False)
+    return response.headers['location']
 
 
 class Conversation(object):
@@ -54,7 +52,7 @@ class Conversation(object):
         for tweet in items:
             if type(tweet[1]).__name__ == 'DirectMessage':
                 irc_formatted_date = datetime.datetime.fromtimestamp(
-                    int(tweet[1].timestamp)).strftime('%Y-%m-%d %H:%M:%S')
+                    int(tweet[1].time_stamp)).strftime('%Y-%m-%d %H:%M:%S')
                 print(
                     '[{0}] <{1}> '.format(
                         irc_formatted_date,
@@ -77,7 +75,7 @@ class Conversation(object):
         for tweet in items:
             if type(tweet[1]).__name__ == 'DirectMessage':
                 irc_formatted_date = datetime.datetime.fromtimestamp(
-                    int(tweet[1].timestamp)).strftime('%Y-%m-%d %H:%M:%S')
+                    int(tweet[1].time_stamp)).strftime('%Y-%m-%d %H:%M:%S')
                 file_buffer += '[{0}] <{1}> '.format(
                     irc_formatted_date, tweet[1].author)
                 for element in tweet[1].elements:
@@ -121,13 +119,13 @@ class DirectMessage(object):
     """This class is a representation of a Direct Message (a tweet)"""
 
     tweet_id = ''
-    timestamp = ''
+    time_stamp = ''
     author = ''
     elements = []
 
-    def __init__(self, tweet_id, timestamp, author):
+    def __init__(self, tweet_id, time_stamp, author):
         self.tweet_id = tweet_id
-        self.timestamp = timestamp
+        self.time_stamp = time_stamp
         self.author = author
 
 
@@ -198,24 +196,30 @@ class DirectMessageMedia(object):
 
     _media_preview_url = ''
     _media_url = ''
+    _media_alt = ''
     _media_type = ''
 
-    def __init__(self, media_url, media_preview_url, MediaType):
+    def __init__(self, media_url, media_preview_url, media_alt, MediaType):
         self._media_url = media_url
         self._media_preview_url = media_preview_url
+        self._media_alt = media_alt
         self._media_type = MediaType
 
     def __repr__(self):
         # Todo
-        return "{0}('{1}','{2}')".format(
+        return "{0}('{1}','{2}','{3}')".format(
             self.__class__.__name__,
             self._media_url,
-            self._media_preview_url)
+            self._media_preview_url,
+            self._media_alt)
 
     def __str__(self):
         if self._media_preview_url != '':
             return '[Media-{0}] {1} [Media-preview] {2}'.format(
                 self._media_type.name, self._media_url, self._media_preview_url)
+        elif self._media_alt != '':
+            return '[Media-{0}] [{1}] {2}'.format(
+                self._media_type.name, self._media_alt, self._media_url)
         else:
             return '[Media-{0}] {1}'.format(
                 self._media_type.name, self._media_url)
@@ -259,19 +263,30 @@ class Crawler(object):
             params=payload)
         cookies = requests.utils.dict_from_cookiejar(self._session.cookies)
         if 'auth_token' in cookies:
-            print('Authentication succeedeed.')
+            print('Authentication succeedeed.{0}'.format(os.linesep))
         else:
             raise PermissionError('Your username or password was invalid.')
 
     def get_threads(self):
+        threads = []
         messages_url = self._twitter_base_url + '/messages'
+        payload = {}
 
-        r = self._session.get(
-            messages_url,
-            headers=self._ajax_headers)
+        while True:
+            response = self._session.get(
+                messages_url,
+                headers=self._ajax_headers,
+                params=payload)
 
-        json = r.json()
-        return json['inner']['threads']
+            json = response.json()
+            threads += json['inner']['threads']
+
+            if json['inner']['has_more'] == False:
+                break
+
+            payload = {'max_entry_id': json['inner']['min_entry_id']}
+
+        return threads
 
     def _extract_dm_text_url(self, element, expanding_mode='only_expanded'):
         raw_url = ''
@@ -298,7 +313,7 @@ class Crawler(object):
 
     # Todo: Implement parsing options
     def _extract_dm_text_emoji(self, element):
-        raw_emoji = '[{0}]'.format(element.get('title'))
+        raw_emoji = '{0}'.format(element.get('alt'))
         if element.tail is not None:
             raw_emoji += element.tail
         return raw_emoji
@@ -332,24 +347,32 @@ class Crawler(object):
             self,
             element,
             tweet_id,
+            time_stamp,
             download_images,
             download_gif):
         media_url = ''
         media_preview_url = ''
+        media_alt = ''
         media_type = MediaType.unknown
+
+        formatted_timestamp = datetime.datetime.fromtimestamp(
+            int(time_stamp)).strftime('%Y%m%d-%H%M%S')
 
         img_url = element.find('.//img')
         gif_url = element.cssselect('div.PlayableMedia--gif')
         video_url = element.cssselect('div.PlayableMedia--video')
+
         if img_url is not None:
             media_url = img_url.get('data-full-img')
+            media_alt = img_url.get('alt')
             media_filename_re = re.findall('/\d+/(.+)/(.+)$', media_url)
-            media_sticker_filename_re = re.findall('/stickers/stickers/(.+)$', media_url)
+            media_sticker_filename_re = re.findall(
+                '/stickers/stickers/(.+)$', media_url)
 
             if len(media_filename_re) > 0:
                 media_type = MediaType.image
-                media_filename = tweet_id + '-' + \
-                    media_filename_re[0][0] + '-' + media_filename_re[0][1]
+                media_filename = '{0}-{1}-{2}-{3}'.format(
+                    formatted_timestamp, tweet_id, media_filename_re[0][0], media_filename_re[0][1])
             elif len(media_sticker_filename_re) > 0:
                 # It is a sticker
                 media_type = MediaType.sticker
@@ -358,13 +381,13 @@ class Crawler(object):
                 # Unknown media type
                 print("Unknown media type")
             if media_filename is not None and download_images:
-                r = self._session.get(media_url, stream=True)
-                if r.status_code == 200:
+                response = self._session.get(media_url, stream=True)
+                if response.status_code == 200:
                     os.makedirs(
                         '{0}/images'.format(self._conversation_id), exist_ok=True)
                     with open('{0}/images/{1}'.format(self._conversation_id, media_filename), 'wb') as f:
-                        r.raw.decode_content = True
-                        shutil.copyfileobj(r.raw, f)
+                        response.raw.decode_content = True
+                        shutil.copyfileobj(response.raw, f)
         elif len(gif_url) > 0:
             media_type = MediaType.gif
             media_style = gif_url[0].find('div').get('style')
@@ -372,17 +395,17 @@ class Crawler(object):
             media_url = media_preview_url.replace(
                 'dm_gif_preview', 'dm_gif').replace('.jpg', '.mp4')
             media_filename_re = re.findall('dm_gif/(.+)/(.+)$', media_url)
-            media_filename = media_filename_re[0][
-                0] + '-' + media_filename_re[0][1]
+            media_filename = '{0}-{1}-{2}'.format(formatted_timestamp, media_filename_re[0][
+                0], media_filename_re[0][1])
 
             if download_gif:
-                r = self._session.get(media_url, stream=True)
-                if r.status_code == 200:
+                response = self._session.get(media_url, stream=True)
+                if response.status_code == 200:
                     os.makedirs(
                         '{0}/mp4'.format(self._conversation_id), exist_ok=True)
                     with open('{0}/mp4/{1}'.format(self._conversation_id, media_filename), 'wb') as f:
-                        r.raw.decode_content = True
-                        shutil.copyfileobj(r.raw, f)
+                        response.raw.decode_content = True
+                        shutil.copyfileobj(response.raw, f)
         elif len(video_url) > 0:
             media_type = MediaType.video
             media_style = video_url[0].find('div').get('style')
@@ -391,7 +414,7 @@ class Crawler(object):
         else:
             print('Unknown media')
 
-        return DirectMessageMedia(media_url, media_preview_url, media_type)
+        return DirectMessageMedia(media_url, media_preview_url, media_alt, media_type)
 
     def _parse_dm_tweet(self, element):
         tweet_url = ''
@@ -421,20 +444,9 @@ class Crawler(object):
         for tweet_id in orderedTweets:
             dm_author = ''
             message = ''
-            irc_formatted_date = ''
             dm_element_text = ''
             value = tweets[tweet_id]
 
-            # Mac OS lxml bug workaround
-            if platform == "darwin":
-                # Replace four-byte encoded characters by WHITE SQUARE (U+25A1)
-                try:
-                    # UCS-4
-                    highpoints = re.compile(u'[\U00010000-\U0010ffff]')
-                except re.error:
-                    # UCS-2
-                    highpoints = re.compile(u'[\uD800-\uDBFF][\uDC00-\uDFFF]')
-                value = highpoints.sub(u'\u25A1', value)
             try:
                 document = lxml.html.fragment_fromstring(value)
 
@@ -464,7 +476,7 @@ class Crawler(object):
                         'div.DirectMessage-message > div.DirectMessage-attachmentContainer > div[class^="DirectMessage-"], div.DirectMessage-message > div.DirectMessage-contentContainer > div[class^="DirectMessage-"], div.DirectMessage-message > div.DirectMessage-media')
 
                     message = DirectMessage(tweet_id, time_stamp, dm_author)
-                    
+
                     # Required array cleanup
                     message.elements = []
                     for dm_element in dm_elements:
@@ -474,7 +486,7 @@ class Crawler(object):
                             message.elements.append(element_object)
                         elif 'DirectMessage-media' in dm_element_type:
                             element_object = self._parse_dm_media(
-                                dm_element, tweet_id, download_images, download_gif)
+                                dm_element, tweet_id, time_stamp, download_images, download_gif)
                             message.elements.append(element_object)
                         elif 'DirectMessage-tweet' in dm_element_type:
                             element_object = self._parse_dm_tweet(dm_element)
@@ -513,7 +525,8 @@ class Crawler(object):
             raw_output_file = open(
                 '{0}-raw.txt'.format(conversation_id), 'wb')
 
-        print('Starting crawl of \'{0}\''.format(conversation_id))
+        print('{0}Starting crawl of \'{1}\''.format(
+            os.linesep, conversation_id))
 
         self._conversation_id = conversation_id
         conversation = Conversation(conversation_id)
@@ -522,12 +535,12 @@ class Crawler(object):
         processed_tweet_counter = 0
 
         while True:
-            r = self._session.get(
+            response = self._session.get(
                 conversation_url,
                 headers=self._ajax_headers,
                 params=payload)
 
-            json = r.json()
+            json = response.json()
 
             if 'max_entry_id' not in json:
                 print('Begin of thread reached')
@@ -539,8 +552,8 @@ class Crawler(object):
             tweets = json['items']
 
             if raw_output:
-                orderedTweets = sorted(tweets, reverse=True)
-                for tweet_id in orderedTweets:
+                ordered_tweets = sorted(tweets, reverse=True)
+                for tweet_id in ordered_tweets:
                     raw_output_file.write(tweets[tweet_id].encode('UTF-8'))
 
             # Get tweets for the current request
@@ -562,5 +575,6 @@ class Crawler(object):
         # print('Printing conversation')
         # conversation.print_conversation()
 
-        print('Writing conversation to {0}.txt'.format(conversation_id))
+        print('Writing conversation to {0}.txt'.format(
+            os.path.join(os.getcwd(), conversation_id)))
         conversation.write_conversation('{0}.txt'.format(conversation_id))

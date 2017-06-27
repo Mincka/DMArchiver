@@ -16,13 +16,17 @@
       -r, --raw-output  Write the raw HTML to a file
 """
 
+import os
 import argparse
 import getpass
 import sys
+from dmarchiver import __version__
 from dmarchiver.core import Crawler
 
 
 def main():
+    print("DMArchiver {0}".format(__version__))
+    print("Running on Python {0}{1}".format(sys.version, os.linesep))
     parser = argparse.ArgumentParser()
 
     parser.add_argument("-id", "--conversation_id", help="Conversation ID")
@@ -41,7 +45,7 @@ def main():
         "--raw-output",
         help="Write the raw HTML to a file",
         action="store_true")
-        
+
     args = parser.parse_args()
 
     username = input('Enter your username or email: ')
@@ -69,8 +73,12 @@ def main():
     else:
         print('Conversation ID not specified. Retrieving all the threads.')
         threads = crawler.get_threads()
+        print('{0} thread(s) found.'.format(len(threads)))
+
         for thread_id in threads:
-            crawler.crawl(thread_id, args.download_images, args.download_gifs, args.raw_output)
+            crawler.crawl(thread_id, args.download_images,
+                          args.download_gifs, args.raw_output)
+
 
 if __name__ == "__main__":
     main()

@@ -1,11 +1,11 @@
 [![GitHub release](https://img.shields.io/github/release/Mincka/DMArchiver.svg)](https://github.com/Mincka/DMArchiver/releases) [![PyPI](https://img.shields.io/pypi/v/DMArchiver.svg)](https://pypi.python.org/pypi/dmarchiver) [![Github All Releases](https://img.shields.io/github/downloads/Mincka/DMArchiver/total.svg)](https://github.com/Mincka/DMArchiver/releases) 
 
-### Update 2017-06-20 ###
-
-Due to a recent update in Twitter HTML output, the [scripts were not working properly](https://github.com/Mincka/DMArchiver/issues/14). Fixed releases are [now available](https://github.com/Mincka/DMArchiver/releases/tag/0.1.2). Thanks to @Gorrrg. :)
-
 # DMArchiver
 A tool to archive **all** the direct messages from your private conversations on Twitter.
+
+### Update 2017-06-20
+
+Due to a recent update in Twitter HTML output, the [scripts were not working properly](https://github.com/Mincka/DMArchiver/issues/14). Fixed releases are [now available](https://github.com/Mincka/DMArchiver/releases/tag/0.1.2). Thanks to @Gorrrg. :)
 
 ## Introduction
 Have you ever need to retrieve old information from a chat with your friends on Twitter? Or maybe you would just like to backup all these cheerful moments and keep them safe.
@@ -15,11 +15,10 @@ I have made this tool to retrieve all the tweets from my private conversations a
 **Output sample:**
 ```
 [2016-09-07 10:35:55] <Michael> [Media-image] https://ton.twitter.com/1.1/ton/data/dm/773125478562429059/773401254876366208/mfeDmXXj.jpg I am so a Dexter fan...
-[2016-09-07 10:37:12] <Kathy> He is so sexy. [Flushed face] I love him. [Heavy red heart]
-[2016-09-07 10:38:10] <Steve> You guys are ridiculous! [Face with tears of joy]
+[2016-09-07 10:36:12] <Michael> [Media-sticker] [Grinning face] https://ton.twimg.com/stickers/stickers/10001_raw.png
+[2016-09-07 10:37:12] <Kathy> He is so sexy. 😳 I love him. ❤️
+[2016-09-07 10:38:10] <Steve> You guys are ridiculous! 😂
 ```
-
-Emoji are currently kept with their description to prevent encoding issues.
 
 This tool is also able to **download all the uploaded images** in their original resolution and, as a bonus, also retrieve the **GIFs** you used in your conversations as MP4 files (the format used by Twitter to optimize them and save space).
 
@@ -37,7 +36,7 @@ Using this tool will only behave like you using the Twitter web site with your b
 
 ## Installation & Quick start
 
-By running the tool without any argument, you will be only prompted for your username and your password. The script will retrieve all the messages, from all the conversations (actually, the 50 latest because of a [bug](https://github.com/Mincka/DMArchiver/issues/8)), without the images or the GIFs.
+By running the tool without any argument, you will be only prompted for your username and your password. The script will retrieve all the messages, from all the conversations without the images or the GIFs.
 
 ### Windows
 
@@ -163,11 +162,15 @@ $ brew install python3
 
 ### Binary build with pyinstaller
 
+The Python 3.4 (32-bit) branch is recommended to build the binaries. It will allow the best compatibility with all the platforms.
+
 #### On Windows
 
 ```
 > pip3 install pyinstaller
 > pyinstaller --onefile dmarchiver\cmdline.py -n dmarchiver.exe
+or alternative in case of import error
+pyinstaller --onefile dmarchiver\cmdline.py --paths=dmarchiver -n dmarchiver.exe --hidden-import queue
 > cd dist
 > dmarchiver.exe
 ```
@@ -178,27 +181,30 @@ $ brew install python3
 $ pip3 install pyinstaller
 $ pyinstaller --onefile dmarchiver/cmdline.py -n dmarchiver
 or alternative for macOS Sierra with handling of external imports
-$ /Library/Frameworks/Python.framework/Versions/3.5/bin/pyinstaller --onefile dmarchiver/cmdline.py -n dmarchiver --hidden-import cssselect --hidden-import lxml --hidden-import urllib3 --hidden-import requests --hidden-import queue 
+$ /Library/Frameworks/Python.framework/Versions/3.4/bin/pyinstaller --onefile dmarchiver/cmdline.py -n dmarchiver --hidden-import cssselect --hidden-import lxml --hidden-import urllib3 --hidden-import requests --hidden-import queue 
 $ cd dist
 $ ./dmarchiver
 ```
 
-## Known issue
+## Known issues
 
-### Missing emoji support in quoted tweets and usernames (Mac OS X / macOS only)
-There is an issue with the `lxml` build on macOS which prevent the parsing of four-byte encoded characters. Consequently, as a workaround, the script will replace emojis (and other special characters, like Pi (U+1D70B)) in usernames and tweets. See [issue #1](https://github.com/Mincka/DMArchiver/issues/1) for more information.
+### Missing messages in conversations
+Sometimes, generally due to a connection error, the script will write the messages of the conversations before retrieving all the messages. In this case, you should try to run the script again.
+
+### Error message: "Unknown element type" / "Unknown media type" / "Unknown media"
+Twitter may introduce new features or change the HTML output at any time. When it happens, DMArchiver may generate empty, broken logs or even crash. This kind of error message means the tool must be updated to handle the new output. Feel free to create a new issue when you encounter one of these messages.
 
 ## Troubleshooting
 
 ### Error building `lxml`
 You may encounter building issues with the `lxml` library on Windows (`error: Unable to find vcvarsall.bat`). The most simple and straightforward fix is to download and install a precompiled binary from [this site](http://www.lfd.uci.edu/~gohlke/pythonlibs/#lxml) and install the package locally:
 
-`$ pip install lxml-3.6.4-cp35-cp35m-win_amd64.whl`
+`$ pip install lxml‑3.8.0‑cp34‑cp34m‑win32.whl`
 
 ### `dmarchiver` script not found after `pip3 install`
 If Python bin path in not in your environment PATH variable, the program will not be found. Just run it with the complete path (location may vary...):
 ```
-$ /Library/Frameworks/Python.framework/Versions/3.5/bin/dmarchiver
+$ /Library/Frameworks/Python.framework/Versions/3.4/bin/dmarchiver
 ```
 
 ## FAQ
@@ -211,7 +217,7 @@ Not at all. The tool simulates a Firefox browser on Windows 10. Consequently, if
 
 ## License
 
-Copyright (C) 2016 Julien EHRHART
+Copyright (C) 2016-2017 Julien EHRHART
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
