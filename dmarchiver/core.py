@@ -64,7 +64,7 @@ class Conversation(object):
             elif type(tweet[1]).__name__ == 'DMConversationEntry':
                 print('[DMConversationEntry] {0}\r'.format(tweet[1]))
 
-    def write_conversation(self, filename):
+    def write_conversation(self, filename, max_id):
         """Write the content of the conversation to a file"""
 
         file_buffer = ''
@@ -93,8 +93,26 @@ class Conversation(object):
                 file_buffer += '[DMConversationEntry] {0}{1}'.format(
                     tweet[1], os.linesep)
 
-        with open(filename, "wb") as myfile:
-            myfile.write(file_buffer.encode('UTF-8'))
+        # Write the latest tweet ID to allow incremental updates
+        if len(items) > 0:
+            file_buffer += '[LatestTweetID] {0}{1}'.format(
+                tweet[1].tweet_id, os.linesep)
+            if max_id != '0':
+                with open(filename, 'rb+') as file:
+                    lines = file.readlines()
+                    # Remove last line and rewrite the file (poor
+                    # performance...)
+                    lines = lines[:-1]
+                    file.seek(0)
+                    file.write(b''.join(lines))
+                    file.truncate()
+
+            file_mode = "ab"
+            if max_id == '0':
+                file_mode = "wb"
+
+            with open(filename, file_mode) as file:
+                file.write(file_buffer.encode('UTF-8'))
 
 
 class DMConversationEntry(object):
@@ -239,17 +257,19 @@ class Crawler(object):
         'Accept': 'application/json, text/javascript, */*; q=0.01',
         'X-Requested-With': 'XMLHttpRequest'}
 
+    _max_id_found = False
+
     def authenticate(self, username, password):
         login_url = self._twitter_base_url + '/login'
         sessions_url = self._twitter_base_url + '/sessions'
 
         self._session = requests.Session()
 
-        r = self._session.get(
+        response = self._session.get(
             login_url,
             headers=self._http_headers)
 
-        document = lxml.html.document_fromstring(r.text)
+        document = lxml.html.document_fromstring(response.text)
         authenticity_token = document.xpath(
             '//input[@name="authenticity_token"]/@value')[0]
 
@@ -257,7 +277,7 @@ class Crawler(object):
                    'session[password]': password,
                    'authenticity_token': authenticity_token}
 
-        r = self._session.post(
+        response = self._session.post(
             sessions_url,
             headers=self._ajax_headers,
             params=payload)
@@ -287,6 +307,26 @@ class Crawler(object):
             payload = {'max_entry_id': json['inner']['min_entry_id']}
 
         return threads
+
+    def _get_latest_tweet_id(self, thread_id):
+        filename = '{0}.txt'.format(thread_id)
+        try:
+            with open(filename, 'rb+') as file:
+                lines = file.readlines()
+                regex = r"^\[LatestTweetID\] ([0-9]+)"
+                result = re.match(regex, lines[-1].decode('utf-8'))
+
+                if result:
+                    print('Latest tweet ID found in previous dump. Incremental update.')
+                    return result.group(1)
+                else:
+                    print(
+                        'Latest tweet ID not found in previous dump. Creating a new one with incremental support.')
+        except IOError:
+            print(
+                "Previous conversation not found. Creating a new one with incremental support.")
+
+        return '0'
 
     def _extract_dm_text_url(self, element, expanding_mode='only_expanded'):
         raw_url = ''
@@ -385,9 +425,9 @@ class Crawler(object):
                 if response.status_code == 200:
                     os.makedirs(
                         '{0}/images'.format(self._conversation_id), exist_ok=True)
-                    with open('{0}/images/{1}'.format(self._conversation_id, media_filename), 'wb') as f:
+                    with open('{0}/images/{1}'.format(self._conversation_id, media_filename), 'wb') as file:
                         response.raw.decode_content = True
-                        shutil.copyfileobj(response.raw, f)
+                        shutil.copyfileobj(response.raw, file)
         elif len(gif_url) > 0:
             media_type = MediaType.gif
             media_style = gif_url[0].find('div').get('style')
@@ -403,9 +443,9 @@ class Crawler(object):
                 if response.status_code == 200:
                     os.makedirs(
                         '{0}/mp4'.format(self._conversation_id), exist_ok=True)
-                    with open('{0}/mp4/{1}'.format(self._conversation_id, media_filename), 'wb') as f:
+                    with open('{0}/mp4/{1}'.format(self._conversation_id, media_filename), 'wb') as file:
                         response.raw.decode_content = True
-                        shutil.copyfileobj(response.raw, f)
+                        shutil.copyfileobj(response.raw, file)
         elif len(video_url) > 0:
             media_type = MediaType.video
             media_style = video_url[0].find('div').get('style')
@@ -431,9 +471,9 @@ class Crawler(object):
             card.get('data-card-url'),
             card.get('data-card-name'))
 
-    def _process_tweets(self, tweets, download_images, download_gif):
+    def _process_tweets(self, tweets, download_images, download_gif, max_id):
         conversation_set = collections.OrderedDict()
-        orderedTweets = sorted(tweets, reverse=True)
+        ordered_tweets = sorted(tweets, reverse=True)
 
         # DirectMessage-message
         # -- DirectMessage-text
@@ -441,11 +481,18 @@ class Crawler(object):
         # -- DirectMessage-tweet
         # -- DirectMessage-card
 
-        for tweet_id in orderedTweets:
+        for tweet_id in ordered_tweets:
             dm_author = ''
             message = ''
             dm_element_text = ''
             value = tweets[tweet_id]
+
+            # If we reached the previous max tweet id,
+            # we stop the execution
+            if tweet_id == max_id:
+                self._max_id_found = True
+                print('Previous tweet limit found.')
+                break
 
             try:
                 document = lxml.html.fragment_fromstring(value)
@@ -471,7 +518,8 @@ class Crawler(object):
 
                     # DirectMessage-text, div.DirectMessage-media,
                     # div.DirectMessage-tweet_id, div.DirectMessage-card...
-                    # First select is for non-text messages, second one is for text messages, last one is a special case for stickers
+                    # First select is for non-text messages, second one is for
+                    # text messages, last one is a special case for stickers
                     dm_elements = document.cssselect(
                         'div.DirectMessage-message > div.DirectMessage-attachmentContainer > div[class^="DirectMessage-"], div.DirectMessage-message > div.DirectMessage-contentContainer > div[class^="DirectMessage-"], div.DirectMessage-message > div.DirectMessage-media')
 
@@ -528,13 +576,16 @@ class Crawler(object):
         print('{0}Starting crawl of \'{1}\''.format(
             os.linesep, conversation_id))
 
+        # Attempt to find the latest tweet id of a previous crawl session
+        max_id = self._get_latest_tweet_id(conversation_id)
+
         self._conversation_id = conversation_id
         conversation = Conversation(conversation_id)
         conversation_url = self._twitter_base_url + '/messages/with/conversation'
         payload = {'id': conversation_id}
         processed_tweet_counter = 0
 
-        while True:
+        while True and self._max_id_found == False:
             response = self._session.get(
                 conversation_url,
                 headers=self._ajax_headers,
@@ -558,7 +609,7 @@ class Crawler(object):
 
             # Get tweets for the current request
             conversation_set = self._process_tweets(
-                tweets, download_images, download_gif)
+                tweets, download_images, download_gif, max_id)
 
             # Append to the whole conversation
             for tweet_id in conversation_set:
@@ -577,4 +628,7 @@ class Crawler(object):
 
         print('Writing conversation to {0}.txt'.format(
             os.path.join(os.getcwd(), conversation_id)))
-        conversation.write_conversation('{0}.txt'.format(conversation_id))
+        conversation.write_conversation(
+            '{0}.txt'.format(conversation_id), max_id)
+
+        self._max_id_found = False
