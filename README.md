@@ -215,6 +215,9 @@ Not at all. Everything happens on your computer. Your username and your password
 ### I received an e-mail from Twitter saying a suspicious connection occured on Twitter, should I be worried about it?
 Not at all. The tool simulates a Firefox browser on Windows 10. Consequently, if you do not use usually this configuration, Twitter warns you about this. You can safely ignore this message if you received it at the same time the tool was used.
 
+### macOS says the application is blocked because it is not from an identified developer, what should I do?
+I am not able to sign the macOS executable. You will have to unblock the application if you want to use it. Go the "Security & Privacy" settings and click on the "Open Anyway" button.
+
 ## License
 
 Copyright (C) 2016-2017 Julien EHRHART
