@@ -43,11 +43,13 @@ Unzip the archive in a temporary folder and double-click the executable or run i
 > C:\Temp\DMArchiver.exe
 ```
 
+Note: If you run the tool directly from the zip archive window, it may fail when writing the log file. Instead, copy `DMArchiver.exe` to any directory and run it from there.
+
 ### Mac OS X / macOS
 
 Download a macOS build from the [project releases](https://github.com/Mincka/DMArchiver/releases).
 
-Then double-click the executable or run Terminal and execute the following commands:
+Then click on the executable, or run Terminal and execute the following commands:
 ```
 $ cd Downloads
 $ ./dmarchiver
