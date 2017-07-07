@@ -3,10 +3,6 @@
 # DMArchiver
 A tool to archive **all** the direct messages from your private conversations on Twitter.
 
-### Update 2017-06-20
-
-Due to a recent update in Twitter HTML output, the [scripts were not working properly](https://github.com/Mincka/DMArchiver/issues/14). Fixed releases are [now available](https://github.com/Mincka/DMArchiver/releases/tag/0.1.2). Thanks to @Gorrrg. :)
-
 ## Introduction
 Have you ever need to retrieve old information from a chat with your friends on Twitter? Or maybe you would just like to backup all these cheerful moments and keep them safe.
 
@@ -87,6 +83,8 @@ $ dmarchiver --help
 	  -h, --help            show this help message and exit
 	  -id CONVERSATION_ID, --conversation_id CONVERSATION_ID
 	                        Conversation ID
+      -u,  --username       Username (e-mail or handle)
+      -p,  --password       Password
 	  -di, --download-images
 	                        Download images
 	  -dg, --download-gifs  Download GIFs (as MP4)
@@ -129,6 +127,11 @@ for (var i = 0; i < conversations.length; i++) {
   conversations[i].parentNode.insertBefore(p, conversations[i]);
 }
 ```
+
+#### Schedule a task to perform incremental backups of a conversation
+You can also specify the username and the password in the options. Because DMArchiver is able to perform incremental updates, you can schedule a task or create a shortcut with the following arguments:
+
+`$ dmarchiver -id "conversation_id" -di -dg -u your_username -p your_password`
 
 ### Module import
 ```python
@@ -210,7 +213,7 @@ $ /Library/Frameworks/Python.framework/Versions/3.4/bin/dmarchiver
 ## FAQ
 
 ### What happens to my password and my messages? Are they sent to a third-party service?
-Not at all. Everything happens on your computer. Your username and your password are only sent once to Twitter using a secured connection. Your messages are downloaded from your connection, and are written on your computer at the end of the script execution, so are the images and the GIFs if you chose to download them.
+Not at all. Unlike other online backup services, everything happens here on your computer. Your username and your password are only sent once to Twitter using a secured connection. Your messages are downloaded from your connection, and are written on your computer at the end of the script execution, so are the images and the GIFs if you chose to download them.
 
 ### I received an e-mail from Twitter saying a suspicious connection occured on Twitter, should I be worried about it?
 Not at all. The tool simulates a Firefox browser on Windows 10. Consequently, if you do not use usually this configuration, Twitter warns you about this. You can safely ignore this message if you received it at the same time the tool was used.

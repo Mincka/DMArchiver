@@ -10,6 +10,8 @@
       -h, --help            show this help message and exit
       -id CONVERSATION_ID, --conversation_id CONVERSATION_ID
                             Conversation ID
+      -u,  --username       Username (e-mail or handle)
+      -p,  --password       Password
       -di, --download-images
                             Download images
       -dg, --download-gifs  Download GIFs (as MP4)
@@ -30,6 +32,8 @@ def main():
     parser = argparse.ArgumentParser()
 
     parser.add_argument("-id", "--conversation_id", help="Conversation ID")
+    parser.add_argument("-u", "--username", help="Username (e-mail or handle)")
+    parser.add_argument("-p", "--password", help="Password")
     parser.add_argument(
         "-di",
         "--download-images",
@@ -48,9 +52,16 @@ def main():
 
     args = parser.parse_args()
 
-    username = input('Enter your username or email: ')
-    password = getpass.getpass(
-        'Enter your password (characters will not be displayed): ')
+    if args.username is None:
+        username = input('Enter your username or email: ')
+    else:
+        username = args.username
+
+    if args.password is None:
+        password = getpass.getpass(
+            'Enter your password (characters will not be displayed): ')
+    else:
+        password = args.password
 
     crawler = Crawler()
     try:
