@@ -4,7 +4,7 @@
     Direct Messages Archiver - Command Line
 
     Usage:
-    # dmarchiver [-h] [-id CONVERSATION_ID] [-di] [-dg]
+    # dmarchiver [-h] [-id CONVERSATION_ID] [-u] [-p] [-di] [-dg] [-dv]
 
     optional arguments:
       -h, --help            show this help message and exit
@@ -15,6 +15,8 @@
       -di, --download-images
                             Download images
       -dg, --download-gifs  Download GIFs (as MP4)
+      -dv, --download-videos
+                            Download videos (as MP4)
       -r, --raw-output  Write the raw HTML to a file
 """
 
@@ -45,6 +47,11 @@ def main():
         help="Download GIFs (as MP4)",
         action="store_true")
     parser.add_argument(
+        "-dv",
+        "--download-videos",
+        help="Download videos (as MP4)",
+        action="store_true")
+    parser.add_argument(
         "-r",
         "--raw-output",
         help="Write the raw HTML to a file",
@@ -70,26 +77,31 @@ def main():
         print('Error: {0}'.format(err.args[0]))
         print('Exiting.')
         sys.exit()
+    
+    print('Press Ctrl+C at anytime to write the current conversation and skip to the next one.\n Keep it pressed to exit the script.\n')
 
-    if args.conversation_id is not None:
-        # Prevent error when using '' instead of ""
-        conversation_id = args.conversation_id.strip('\'')
-        print(
-            'Conversation ID specified ({0}). Retrieving only one thread.'.format(
-                args.conversation_id))
-        crawler.crawl(
-            conversation_id,
-            args.download_images,
-            args.download_gifs, args.raw_output)
-    else:
-        print('Conversation ID not specified. Retrieving all the threads.')
-        threads = crawler.get_threads()
-        print('{0} thread(s) found.'.format(len(threads)))
+    try:
+        if args.conversation_id is not None:
+            # Prevent error when using '' instead of ""
+            conversation_id = args.conversation_id.strip('\'')
+            print(
+                'Conversation ID specified ({0}). Retrieving only one thread.'.format(
+                    args.conversation_id))
+            crawler.crawl(
+                conversation_id,
+                args.download_images,
+                args.download_gifs, args.raw_output)
+        else:
+            print('Conversation ID not specified. Retrieving all the threads.')
+            threads = crawler.get_threads()
+            print('{0} thread(s) found.'.format(len(threads)))
 
-        for thread_id in threads:
-            crawler.crawl(thread_id, args.download_images,
-                          args.download_gifs, args.raw_output)
-
+            for thread_id in threads:
+                crawler.crawl(thread_id, args.download_images,
+                              args.download_gifs, args.download_videos, args.raw_output)
+    except KeyboardInterrupt:
+        print('Script execution interruption requested. Exiting.')
+        sys.exit()
 
 if __name__ == "__main__":
     main()

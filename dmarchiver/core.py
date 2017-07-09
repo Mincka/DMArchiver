@@ -389,7 +389,8 @@ class Crawler(object):
             tweet_id,
             time_stamp,
             download_images,
-            download_gif):
+            download_gifs,
+            download_videos):
         media_url = ''
         media_preview_url = ''
         media_alt = ''
@@ -438,12 +439,12 @@ class Crawler(object):
             media_filename = '{0}-{1}-{2}'.format(formatted_timestamp, media_filename_re[0][
                 0], media_filename_re[0][1])
 
-            if download_gif:
+            if download_gifs:
                 response = self._session.get(media_url, stream=True)
                 if response.status_code == 200:
                     os.makedirs(
-                        '{0}/mp4'.format(self._conversation_id), exist_ok=True)
-                    with open('{0}/mp4/{1}'.format(self._conversation_id, media_filename), 'wb') as file:
+                        '{0}/mp4-gifs'.format(self._conversation_id), exist_ok=True)
+                    with open('{0}/mp4-gifs/{1}'.format(self._conversation_id, media_filename), 'wb') as file:
                         response.raw.decode_content = True
                         shutil.copyfileobj(response.raw, file)
         elif len(video_url) > 0:
@@ -451,6 +452,19 @@ class Crawler(object):
             media_style = video_url[0].find('div').get('style')
             media_preview_url = re.findall('url\(\'(.*?)\'\)', media_style)[0]
             media_url = 'https://twitter.com/i/videos/dm/' + tweet_id
+            video_url = 'https://mobile.twitter.com/messages/media/' + tweet_id
+            media_filename = '{0}-{1}.mp4'.format(
+                formatted_timestamp, tweet_id)
+
+            if download_videos:
+                response = self._session.get(video_url, stream=True)
+                if response.status_code == 200:
+                    os.makedirs(
+                        '{0}/mp4-videos'.format(self._conversation_id), exist_ok=True)
+                    with open('{0}/mp4-videos/{1}'.format(self._conversation_id, media_filename), 'wb') as file:
+                        response.raw.decode_content = True
+                        shutil.copyfileobj(response.raw, file)
+
         else:
             print('Unknown media')
 
@@ -471,7 +485,7 @@ class Crawler(object):
             card.get('data-card-url'),
             card.get('data-card-name'))
 
-    def _process_tweets(self, tweets, download_images, download_gif, max_id):
+    def _process_tweets(self, tweets, download_images, download_gifs, download_videos, max_id):
         conversation_set = collections.OrderedDict()
         ordered_tweets = sorted(tweets, reverse=True)
 
@@ -534,7 +548,7 @@ class Crawler(object):
                             message.elements.append(element_object)
                         elif 'DirectMessage-media' in dm_element_type:
                             element_object = self._parse_dm_media(
-                                dm_element, tweet_id, time_stamp, download_images, download_gif)
+                                dm_element, tweet_id, time_stamp, download_images, download_gifs, download_videos)
                             message.elements.append(element_object)
                         elif 'DirectMessage-tweet' in dm_element_type:
                             element_object = self._parse_dm_tweet(dm_element)
@@ -548,6 +562,11 @@ class Crawler(object):
                 elif len(dm_conversation_entry) > 0:
                     dm_element_text = dm_conversation_entry[0].text.strip()
                     message = DMConversationEntry(tweet_id, dm_element_text)
+            except KeyboardInterrupt:
+                print(
+                    'Script execution interruption requested. Writing the conversation.')
+                self._max_id_found = True
+                break
             except:
                 print(
                     'Unexpected error for tweet \'{0}\', raw HTML will be used for the tweet.'.format(tweet_id))
@@ -564,7 +583,8 @@ class Crawler(object):
             self,
             conversation_id,
             download_images=False,
-            download_gif=False,
+            download_gifs=False,
+            download_videos=False,
             raw_output=False):
 
         raw_output_file = None
@@ -585,38 +605,42 @@ class Crawler(object):
         payload = {'id': conversation_id}
         processed_tweet_counter = 0
 
-        while True and self._max_id_found == False:
-            response = self._session.get(
-                conversation_url,
-                headers=self._ajax_headers,
-                params=payload)
+        try:
+            while True and self._max_id_found == False:
+                response = self._session.get(
+                    conversation_url,
+                    headers=self._ajax_headers,
+                    params=payload)
 
-            json = response.json()
+                json = response.json()
 
-            if 'max_entry_id' not in json:
-                print('Begin of thread reached')
-                break
+                if 'max_entry_id' not in json:
+                    print('Begin of thread reached')
+                    break
 
-            payload = {'id': conversation_id,
-                       'max_entry_id': json['min_entry_id']}
+                payload = {'id': conversation_id,
+                           'max_entry_id': json['min_entry_id']}
 
-            tweets = json['items']
+                tweets = json['items']
 
-            if raw_output:
-                ordered_tweets = sorted(tweets, reverse=True)
-                for tweet_id in ordered_tweets:
-                    raw_output_file.write(tweets[tweet_id].encode('UTF-8'))
+                if raw_output:
+                    ordered_tweets = sorted(tweets, reverse=True)
+                    for tweet_id in ordered_tweets:
+                        raw_output_file.write(tweets[tweet_id].encode('UTF-8'))
 
-            # Get tweets for the current request
-            conversation_set = self._process_tweets(
-                tweets, download_images, download_gif, max_id)
+                # Get tweets for the current request
+                conversation_set = self._process_tweets(
+                    tweets, download_images, download_gifs, download_videos, max_id)
 
-            # Append to the whole conversation
-            for tweet_id in conversation_set:
-                processed_tweet_counter += 1
-                conversation.tweets[tweet_id] = conversation_set[tweet_id]
-                print('Processed tweets: {0}\r'.format(
-                    processed_tweet_counter), end='')
+                # Append to the whole conversation
+                for tweet_id in conversation_set:
+                    processed_tweet_counter += 1
+                    conversation.tweets[tweet_id] = conversation_set[tweet_id]
+                    print('Processed tweets: {0}\r'.format(
+                        processed_tweet_counter), end='')
+        except KeyboardInterrupt:
+            print(
+                'Script execution interruption requested. Writing this conversation.')
 
         if raw_output:
             raw_output_file.close()

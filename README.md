@@ -16,7 +16,7 @@ I have made this tool to retrieve all the tweets from my private conversations a
 [2016-09-07 10:38:10] <Steve> You guys are ridiculous! 😂
 ```
 
-This tool is also able to **download all the uploaded images** in their original resolution and, as a bonus, also retrieve the **GIFs** you used in your conversations as MP4 files (the format used by Twitter to optimize them and save space).
+This tool is also able to **download all the uploaded images and videos** in their original resolution and, as a bonus, also retrieve the **GIFs** you used in your conversations as MP4 files (the format used by Twitter to optimize them and save space).
 
 You may have found suggestions to use the Twitter's archive feature to do the same but Direct Messages are not included in the generated archive.
 
@@ -76,31 +76,33 @@ $ pip3 install dmarchiver --upgrade
 
 ### Command line tool
 ```
-$ dmarchiver [-h] [-id CONVERSATION_ID] [-di] [-dg]
+$ dmarchiver [-h] [-id CONVERSATION_ID] [-u] [-p] [-di] [-dg] [-dv]
 
 $ dmarchiver --help
-	usage: cmdline.py [-h] [-id CONVERSATION_ID] [-di] [-dg]
+	usage: cmdline.py [-h] [-id CONVERSATION_ID] [-u] [-p] [-di] [-dg] [-dv]
 	
 	optional arguments:
 	  -h, --help            show this help message and exit
 	  -id CONVERSATION_ID, --conversation_id CONVERSATION_ID
 	                        Conversation ID
-      -u,  --username       Username (e-mail or handle)
-      -p,  --password       Password
+	  -u,  --username       Username (e-mail or handle)
+	  -p,  --password       Password
 	  -di, --download-images
 	                        Download images
 	  -dg, --download-gifs  Download GIFs (as MP4)
-      -r, --raw-output      Write the raw HTML to a file
+	  -dg, --download-videos
+	                        Download videos (as MP4)
+	  -r, --raw-output      Write the raw HTML to a file
 ```
 
 ### Examples
 
-#### Archive all conversations with images:
-`$ dmarchiver -di`
+#### Archive all conversations with images and videos:
+`$ dmarchiver -di -dv`
 
 The script output will be the `645754097571131337.txt` file with the conversation formatted in an _IRC-like_ style.
 
-The images and GIFs files can be respectively found in the `645754097571131337/images` and `645754097571131337/mp4` folders.
+The images and videos files can be respectively found in the `645754097571131337/images` and `645754097571131337/mp4-*` folders.
 
 #### Archive a specific conversation:
 To retrieve only one conversation with the ID `645754097571131337`:
@@ -133,7 +135,7 @@ for (var i = 0; i < conversations.length; i++) {
 #### Schedule a task to perform incremental backups of a conversation
 You can also specify the username and the password in the options. Because DMArchiver is able to perform incremental updates, you can schedule a task or create a shortcut with the following arguments:
 
-`$ dmarchiver -id "conversation_id" -di -dg -u your_username -p your_password`
+`$ dmarchiver -id "conversation_id" -di -dg -dv -u your_username -p your_password`
 
 ### Module import
 ```python
