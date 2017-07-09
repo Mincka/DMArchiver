@@ -98,7 +98,9 @@ $ dmarchiver --help
 ### Examples
 
 #### Archive all conversations with images and videos:
-`$ dmarchiver -di -dv`
+```
+$ dmarchiver -di -dv
+```
 
 The script output will be the `645754097571131337.txt` file with the conversation formatted in an _IRC-like_ style.
 
@@ -107,7 +109,9 @@ The images and videos files can be respectively found in the `645754097571131337
 #### Archive a specific conversation:
 To retrieve only one conversation with the ID `645754097571131337`:
 
-`$ dmarchiver -id "645754097571131337"`
+```
+$ dmarchiver -id "645754097571131337"
+```
 
 The script output will be the `645754097571131337.txt` file with the conversation formatted in an _IRC-like_ style.
 
@@ -135,7 +139,9 @@ for (var i = 0; i < conversations.length; i++) {
 #### Schedule a task to perform incremental backups of a conversation
 You can also specify the username and the password in the options. Because DMArchiver is able to perform incremental updates, you can schedule a task or create a shortcut with the following arguments:
 
-`$ dmarchiver -id "conversation_id" -di -dg -dv -u your_username -p your_password`
+```
+$ dmarchiver -id "conversation_id" -di -dg -dv -u your_username -p your_password
+```
 
 ### Module import
 ```python
@@ -191,6 +197,12 @@ or alternative for macOS Sierra with handling of external imports
 $ /Library/Frameworks/Python.framework/Versions/3.4/bin/pyinstaller --onefile dmarchiver/cmdline.py -n dmarchiver --hidden-import cssselect --hidden-import lxml --hidden-import urllib3 --hidden-import requests --hidden-import queue 
 $ cd dist
 $ ./dmarchiver
+```
+
+### Package upload to PyPI Live
+
+```
+python setup.py sdist upload -r pypi
 ```
 
 ## Known issues
