@@ -299,12 +299,12 @@ class Crawler(object):
                 params=payload)
 
             json = response.json()
-            threads += json['inner']['threads']
+            threads += json['inner']['trusted']['threads']
 
-            if json['inner']['has_more'] == False:
+            if json['inner']['trusted']['has_more'] == False:
                 break
 
-            payload = {'max_entry_id': json['inner']['min_entry_id']}
+            payload = {'max_entry_id': json['inner']['trusted']['min_entry_id']}
 
         return threads
 
