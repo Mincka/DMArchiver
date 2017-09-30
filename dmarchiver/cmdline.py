@@ -24,9 +24,12 @@ import os
 import argparse
 import getpass
 import sys
-from dmarchiver import __version__
-from dmarchiver.core import Crawler
-
+if __name__ == '__main__':
+    from dmarchiver import __version__
+    from dmarchiver.core import Crawler
+else:
+    from .__init__ import __version__
+    from .core import Crawler
 
 def main():
     print("DMArchiver {0}".format(__version__))
@@ -72,7 +75,7 @@ def main():
 
     crawler = Crawler()
     try:
-        crawler.authenticate(username, password)
+        crawler.authenticate(username, password, args.raw_output)
     except PermissionError as err:
         print('Error: {0}'.format(err.args[0]))
         print('Exiting.')
@@ -90,10 +93,10 @@ def main():
             crawler.crawl(
                 conversation_id,
                 args.download_images,
-                args.download_gifs, args.raw_output)
+                args.download_gifs, args.download_videos, args.raw_output)
         else:
             print('Conversation ID not specified. Retrieving all the threads.')
-            threads = crawler.get_threads()
+            threads = crawler.get_threads(args.raw_output)
             print('{0} thread(s) found.'.format(len(threads)))
 
             for thread_id in threads:

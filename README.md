@@ -38,7 +38,7 @@ By running the tool without any argument, you will be only prompted for your use
 
 Download a Windows build from the [project releases](https://github.com/Mincka/DMArchiver/releases).
 
-Unzip the archive in a temporary folder and double-click the executable or run it in a Command Prompt:
+Unzip the archive in a temporary folder and double-click the executable or run it in a Command Prompt (mandatory if you want to use parameters to download images and videos):
 ```
 > C:\Temp\DMArchiver.exe
 ```
@@ -49,7 +49,7 @@ Note: If you run the tool directly from the zip archive window, it may fail when
 
 Download a macOS build from the [project releases](https://github.com/Mincka/DMArchiver/releases).
 
-Then click on the executable, or run Terminal and execute the following commands:
+Then click on the executable, or run Terminal and execute the following commands (mandatory if you want to use parameters to download images and videos):
 ```
 $ cd Downloads
 $ ./dmarchiver
@@ -143,14 +143,6 @@ You can also specify the username and the password in the options. Because DMArc
 $ dmarchiver -id "conversation_id" -di -dg -dv -u your_username -p your_password
 ```
 
-### Module import
-```python
->>> from dmarchiver.core import Crawler
->>> crawler = Crawler()
->>> crawler.authenticate('username', 'password')
->>> crawler.crawl('conversation_id')
-```
-
 ## Development
 
 ### Ubuntu / Windows
@@ -161,6 +153,7 @@ $ cd DMArchiver
 $ virtualenv venv
 $ source venv/bin/activate # "venv/Scripts/Activate.bat" on Windows
 $ pip install -r requirements.txt
+$ python -m dmarchiver.cmdline
 ```
 
 ### Mac OS X / macOS

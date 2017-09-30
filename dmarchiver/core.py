@@ -259,15 +259,23 @@ class Crawler(object):
 
     _max_id_found = False
 
-    def authenticate(self, username, password):
+    def authenticate(self, username, password, raw_output):
         login_url = self._twitter_base_url + '/login'
         sessions_url = self._twitter_base_url + '/sessions'
 
         self._session = requests.Session()
 
+        if raw_output:
+            raw_output_file = open(
+                'authentication-{0}.txt'.format(username), 'wb')
+
         response = self._session.get(
             login_url,
             headers=self._http_headers)
+
+        if raw_output:
+            raw_output_file.write(response.content)
+            raw_output_file.close()
 
         document = lxml.html.document_fromstring(response.text)
         authenticity_token = document.xpath(
@@ -285,26 +293,49 @@ class Crawler(object):
         if 'auth_token' in cookies:
             print('Authentication succeedeed.{0}'.format(os.linesep))
         else:
-            raise PermissionError('Your username or password was invalid.')
+            raise PermissionError('Your username or password was invalid. Note: DMArchiver does not support multi-factor authentication or application passwords.')
 
-    def get_threads(self):
+    def get_threads(self, raw_output):
         threads = []
         messages_url = self._twitter_base_url + '/messages'
         payload = {}
+        first_request = False
+        if raw_output:
+            raw_output_file = open(
+                'conversation-list.txt', 'wb')
 
         while True:
             response = self._session.get(
                 messages_url,
                 headers=self._ajax_headers,
                 params=payload)
+            
+            if raw_output:
+                raw_output_file.write(response.content)
 
             json = response.json()
-            threads += json['inner']['trusted']['threads']
 
-            if json['inner']['trusted']['has_more'] == False:
+            try:
+                if first_request == False:
+                    first_request = True
+                    threads += json['inner']['trusted']['threads']
+
+                    if json['inner']['trusted']['has_more'] == False:
+                        break
+                else:
+                    threads += json['trusted']['threads']
+
+                    if json['trusted']['has_more'] == False:
+                        break
+
+                payload = {'is_trusted': 'true', 'max_entry_id': json['inner']['trusted']['min_entry_id']}
+                messages_url = self._twitter_base_url + '/inbox/paginate?is_trusted=true&max_entry_id=' + json['inner']['trusted']['min_entry_id']
+            except KeyError as e:
+                print('Unable to parse the list of the conversations. Maybe your account is locked or Twitter has updated the HTML code. Use -r to get the raw output and post an issue on GitHub. Exception: {0}'.format(str(e)))
                 break
 
-            payload = {'max_entry_id': json['inner']['trusted']['min_entry_id']}
+        if raw_output:
+            raw_output_file.close()
 
         return threads
 
