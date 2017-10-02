@@ -293,7 +293,8 @@ class Crawler(object):
         if 'auth_token' in cookies:
             print('Authentication succeedeed.{0}'.format(os.linesep))
         else:
-            raise PermissionError('Your username or password was invalid. Note: DMArchiver does not support multi-factor authentication or application passwords.')
+            raise PermissionError(
+                'Your username or password was invalid. Note: DMArchiver does not support multi-factor authentication or application passwords.')
 
     def get_threads(self, raw_output):
         threads = []
@@ -309,7 +310,7 @@ class Crawler(object):
                 messages_url,
                 headers=self._ajax_headers,
                 params=payload)
-            
+
             if raw_output:
                 raw_output_file.write(response.content)
 
@@ -322,16 +323,25 @@ class Crawler(object):
 
                     if json['inner']['trusted']['has_more'] == False:
                         break
+
+                    payload = {'is_trusted': 'true', 'max_entry_id': json[
+                        'inner']['trusted']['min_entry_id']}
+                    messages_url = self._twitter_base_url + '/inbox/paginate?is_trusted=true&max_entry_id=' + \
+                        json['inner']['trusted']['min_entry_id']
                 else:
                     threads += json['trusted']['threads']
 
                     if json['trusted']['has_more'] == False:
                         break
 
-                payload = {'is_trusted': 'true', 'max_entry_id': json['inner']['trusted']['min_entry_id']}
-                messages_url = self._twitter_base_url + '/inbox/paginate?is_trusted=true&max_entry_id=' + json['inner']['trusted']['min_entry_id']
+                    payload = {'is_trusted': 'true',
+                               'max_entry_id': json['trusted']['min_entry_id']}
+                    messages_url = self._twitter_base_url + '/inbox/paginate?is_trusted=true&max_entry_id=' + \
+                        json['trusted']['min_entry_id']
+
             except KeyError as e:
-                print('Unable to parse the list of the conversations. Maybe your account is locked or Twitter has updated the HTML code. Use -r to get the raw output and post an issue on GitHub. Exception: {0}'.format(str(e)))
+                print(
+                    'Unable to fully parse the list of the conversations. Maybe your account is locked or Twitter has updated the HTML code. Use -r to get the raw output and post an issue on GitHub. Exception: {0}'.format(str(e)))
                 break
 
         if raw_output:
