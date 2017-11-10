@@ -229,7 +229,7 @@ $ /Library/Frameworks/Python.framework/Versions/3.4/bin/dmarchiver
 Not at all. Unlike other online backup services, everything happens here on your computer. Your username and your password are only sent once to Twitter using a secured connection. Your messages are downloaded from your connection, and are written on your computer at the end of the script execution, so are the images and the GIFs if you chose to download them.
 
 ### I received an e-mail from Twitter saying a suspicious connection occured on Twitter, should I be worried about it?
-Not at all. The tool simulates a Firefox browser on Windows 10. Consequently, if you do not use usually this configuration, Twitter warns you about this. You can safely ignore this message if you received it at the same time the tool was used.
+Not at all. The tool simulates a Chrome (Windows or Linux) or Safari (macOS) browser on your current operation system. Because the tool does not keep any cookie locally, Twitter will warn you each time you use it. You can safely ignore this message if you received it at the same time the tool was used.
 
 ### macOS says the application is blocked because it is not from an identified developer, what should I do?
 I am not able to sign the macOS executable. You will have to unblock the application if you want to use it. Go the "Security & Privacy" settings and click on the "Open Anyway" button.

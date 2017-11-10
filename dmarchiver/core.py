@@ -17,6 +17,7 @@ from enum import Enum
 import os
 import re
 import shutil
+from sys import platform
 import time
 import lxml.html
 import requests
@@ -250,10 +251,16 @@ class Crawler(object):
     """
 
     _twitter_base_url = 'https://twitter.com'
+    _user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.89 Safari/537.36'
+    if platform == 'darwin':
+        _user_agent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13) AppleWebKit/603.1.13 (KHTML, like Gecko) Version/10.1 Safari/603.1.13'
+    elif platform == 'linux' or platform == 'linux2':
+        _user_agent = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3184.0 Safari/537.36'
+
     _http_headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64; rv:47.0) Gecko/20100101 Firefox/47.0'}
+        'User-Agent': _user_agent}
     _ajax_headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64; rv:47.0) Gecko/20100101 Firefox/47.0',
+        'User-Agent': _user_agent,
         'Accept': 'application/json, text/javascript, */*; q=0.01',
         'X-Requested-With': 'XMLHttpRequest'}
 
@@ -316,6 +323,17 @@ class Crawler(object):
 
             json = response.json()
 
+            if 'errors' in json:
+                print('An error occured during the parsing of the conversions.\n')
+                if json['errors'][0]['code'] == 326:
+                    print('''DMArchiver was identified as suspicious and your account as been temporarily locked by Twitter.
+Don\'t worry, you can unlock your account by following the intructions on the Twitter website.
+Maybe it\'s the first time you use it or maybe you have a lot of messages.
+You can unlock your account and try again, and possibly use the -d option to slow down the tool.\n''')
+                print('''Twitter error details below:
+Code {0}: {1}\n'''.format(json['errors'][0]['code'], json['errors'][0]['message']))
+                raise Exception('Stopping execution due to parsing error while retrieving the conversations')
+
             try:
                 if first_request is False:
                     first_request = True
@@ -341,7 +359,10 @@ class Crawler(object):
                 
             except KeyError as ex:
                 print(
-                    'Unable to fully parse the list of the conversations. Maybe your account is locked or Twitter has updated the HTML code. Use -r to get the raw output and post an issue on GitHub. Exception: {0}'.format(str(ex)))
+                    'Unable to fully parse the list of the conversations. \
+                     Maybe your account is locked or Twitter has updated the HTML code. \
+                     Use -r to get the raw output and post an issue on GitHub. \
+                     Exception: {0}'.format(str(ex)))
                 break
             
             time.sleep(delay)
@@ -656,6 +677,17 @@ class Crawler(object):
                     params=payload)
 
                 json = response.json()
+
+                if 'errors' in json:
+                    print('An error occured during the parsing of the tweets.\n')
+                    if json['errors'][0]['code'] == 326:
+                        print('''DMArchiver was identified as suspicious and your account as been temporarily locked by Twitter.
+Don\'t worry, you can unlock your account by following the intructions on the Twitter website.
+Maybe it\'s the first time you use it or maybe you have a lot of messages.
+You can unlock your account and try again, and possibly use the -d option to slow down the tool.\n''')
+                    print('''Twitter error details below:
+Code {0}: {1}\n'''.format(json['errors'][0]['code'], json['errors'][0]['message']))
+                    raise Exception('Stopping execution due to parsing error while retrieving the tweets.')
 
                 if 'max_entry_id' not in json:
                     print('Begin of thread reached')

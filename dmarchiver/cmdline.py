@@ -110,6 +110,9 @@ def main():
     except KeyboardInterrupt:
         print('Script execution interruption requested. Exiting.')
         sys.exit()
+    except Exception as ex:
+        print(ex)
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()
