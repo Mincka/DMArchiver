@@ -17,7 +17,7 @@ from enum import Enum
 import os
 import re
 import shutil
-from sys import platform
+import time
 import lxml.html
 import requests
 
@@ -217,11 +217,11 @@ class DirectMessageMedia(object):
     _media_alt = ''
     _media_type = ''
 
-    def __init__(self, media_url, media_preview_url, media_alt, MediaType):
+    def __init__(self, media_url, media_preview_url, media_alt, media_type):
         self._media_url = media_url
         self._media_preview_url = media_preview_url
         self._media_alt = media_alt
-        self._media_type = MediaType
+        self._media_type = media_type
 
     def __repr__(self):
         # Todo
@@ -296,7 +296,7 @@ class Crawler(object):
             raise PermissionError(
                 'Your username or password was invalid. Note: DMArchiver does not support multi-factor authentication or application passwords.')
 
-    def get_threads(self, raw_output):
+    def get_threads(self, delay, raw_output):
         threads = []
         messages_url = self._twitter_base_url + '/messages'
         payload = {}
@@ -317,11 +317,11 @@ class Crawler(object):
             json = response.json()
 
             try:
-                if first_request == False:
+                if first_request is False:
                     first_request = True
                     threads += json['inner']['trusted']['threads']
 
-                    if json['inner']['trusted']['has_more'] == False:
+                    if json['inner']['trusted']['has_more'] is False:
                         break
 
                     payload = {'is_trusted': 'true', 'max_entry_id': json[
@@ -331,19 +331,20 @@ class Crawler(object):
                 else:
                     threads += json['trusted']['threads']
 
-                    if json['trusted']['has_more'] == False:
+                    if json['trusted']['has_more'] is False:
                         break
 
                     payload = {'is_trusted': 'true',
                                'max_entry_id': json['trusted']['min_entry_id']}
                     messages_url = self._twitter_base_url + '/inbox/paginate?is_trusted=true&max_entry_id=' + \
                         json['trusted']['min_entry_id']
-
-            except KeyError as e:
+                
+            except KeyError as ex:
                 print(
-                    'Unable to fully parse the list of the conversations. Maybe your account is locked or Twitter has updated the HTML code. Use -r to get the raw output and post an issue on GitHub. Exception: {0}'.format(str(e)))
+                    'Unable to fully parse the list of the conversations. Maybe your account is locked or Twitter has updated the HTML code. Use -r to get the raw output and post an issue on GitHub. Exception: {0}'.format(str(ex)))
                 break
-
+            
+            time.sleep(delay)
         if raw_output:
             raw_output_file.close()
 
@@ -447,7 +448,7 @@ class Crawler(object):
         if img_url is not None:
             media_url = img_url.get('data-full-img')
             media_alt = img_url.get('alt')
-            media_filename_re = re.findall('/\d+/(.+)/(.+)$', media_url)
+            media_filename_re = re.findall(r'/\d+/(.+)/(.+)$', media_url)
             media_sticker_filename_re = re.findall(
                 '/stickers/stickers/(.+)$', media_url)
 
@@ -473,10 +474,10 @@ class Crawler(object):
         elif len(gif_url) > 0:
             media_type = MediaType.gif
             media_style = gif_url[0].find('div').get('style')
-            media_preview_url = re.findall('url\(\'(.*?)\'\)', media_style)[0]
+            media_preview_url = re.findall(r'url\(\'(.*?)\'\)', media_style)[0]
             media_url = media_preview_url.replace(
                 'dm_gif_preview', 'dm_gif').replace('.jpg', '.mp4')
-            media_filename_re = re.findall('dm_gif/(.+)/(.+)$', media_url)
+            media_filename_re = re.findall(r'dm_gif/(.+)/(.+)$', media_url)
             media_filename = '{0}-{1}-{2}'.format(formatted_timestamp, media_filename_re[0][
                 0], media_filename_re[0][1])
 
@@ -491,7 +492,7 @@ class Crawler(object):
         elif len(video_url) > 0:
             media_type = MediaType.video
             media_style = video_url[0].find('div').get('style')
-            media_preview_url = re.findall('url\(\'(.*?)\'\)', media_style)[0]
+            media_preview_url = re.findall(r'url\(\'(.*?)\'\)', media_style)[0]
             media_url = 'https://twitter.com/i/videos/dm/' + tweet_id
             video_url = 'https://mobile.twitter.com/messages/media/' + tweet_id
             media_filename = '{0}-{1}.mp4'.format(
@@ -623,6 +624,7 @@ class Crawler(object):
     def crawl(
             self,
             conversation_id,
+            delay=0,
             download_images=False,
             download_gifs=False,
             download_videos=False,
@@ -647,7 +649,7 @@ class Crawler(object):
         processed_tweet_counter = 0
 
         try:
-            while True and self._max_id_found == False:
+            while True and self._max_id_found is False:
                 response = self._session.get(
                     conversation_url,
                     headers=self._ajax_headers,
@@ -679,6 +681,8 @@ class Crawler(object):
                     conversation.tweets[tweet_id] = conversation_set[tweet_id]
                     print('Processed tweets: {0}\r'.format(
                         processed_tweet_counter), end='')
+            
+                time.sleep(delay)
         except KeyboardInterrupt:
             print(
                 'Script execution interruption requested. Writing this conversation.')

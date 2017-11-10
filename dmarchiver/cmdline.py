@@ -12,6 +12,7 @@
                             Conversation ID
       -u,  --username       Username (e-mail or handle)
       -p,  --password       Password
+      -d,  --delay          Delay between requests (seconds)
       -di, --download-images
                             Download images
       -dg, --download-gifs  Download GIFs (as MP4)
@@ -24,6 +25,7 @@ import os
 import argparse
 import getpass
 import sys
+import time
 if __name__ == '__main__':
     from dmarchiver import __version__
     from dmarchiver.core import Crawler
@@ -39,6 +41,7 @@ def main():
     parser.add_argument("-id", "--conversation_id", help="Conversation ID")
     parser.add_argument("-u", "--username", help="Username (e-mail or handle)")
     parser.add_argument("-p", "--password", help="Password")
+    parser.add_argument("-d", "--delay", type=float, default=0, help="Delay between requests (seconds)")
     parser.add_argument(
         "-di",
         "--download-images",
@@ -80,7 +83,7 @@ def main():
         print('Error: {0}'.format(err.args[0]))
         print('Exiting.')
         sys.exit()
-    
+
     print('Press Ctrl+C at anytime to write the current conversation and skip to the next one.\n Keep it pressed to exit the script.\n')
 
     try:
@@ -92,16 +95,18 @@ def main():
                     args.conversation_id))
             crawler.crawl(
                 conversation_id,
+                args.delay,
                 args.download_images,
                 args.download_gifs, args.download_videos, args.raw_output)
         else:
             print('Conversation ID not specified. Retrieving all the threads.')
-            threads = crawler.get_threads(args.raw_output)
+            threads = crawler.get_threads(args.delay, args.raw_output)
             print('{0} thread(s) found.'.format(len(threads)))
 
             for thread_id in threads:
-                crawler.crawl(thread_id, args.download_images,
+                crawler.crawl(thread_id, args.delay, args.download_images,
                               args.download_gifs, args.download_videos, args.raw_output)
+                time.sleep(args.delay)
     except KeyboardInterrupt:
         print('Script execution interruption requested. Exiting.')
         sys.exit()

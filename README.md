@@ -90,6 +90,7 @@ $ dmarchiver --help
 	                        Conversation ID
 	  -u,  --username       Username (e-mail or handle)
 	  -p,  --password       Password
+	  -d,  --delay          Delay between requests (seconds)
 	  -di, --download-images
 	                        Download images
 	  -dg, --download-gifs  Download GIFs (as MP4)
