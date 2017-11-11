@@ -13,6 +13,7 @@
       -u,  --username       Username (e-mail or handle)
       -p,  --password       Password
       -d,  --delay          Delay between requests (seconds)
+      -s,  --save-session   Save the session locally
       -di, --download-images
                             Download images
       -dg, --download-gifs  Download GIFs (as MP4)
@@ -43,6 +44,11 @@ def main():
     parser.add_argument("-p", "--password", help="Password")
     parser.add_argument("-d", "--delay", type=float, default=0, help="Delay between requests (seconds)")
     parser.add_argument(
+        "-s",
+        "--save_session",
+        help="Save the session locally.",
+        action="store_true")
+    parser.add_argument(
         "-di",
         "--download-images",
         help="Download images",
@@ -65,6 +71,9 @@ def main():
 
     args = parser.parse_args()
 
+    if args.save_session:
+        print('Warning: Session saving is enabled. Your authentication cookie (Twitter credentials) will be kept in the dmarchiver_session.dat file.')
+
     if args.username is None:
         username = input('Enter your username or email: ')
     else:
@@ -78,7 +87,7 @@ def main():
 
     crawler = Crawler()
     try:
-        crawler.authenticate(username, password, args.raw_output)
+        crawler.authenticate(username, password, args.save_session, args.raw_output)
     except PermissionError as err:
         print('Error: {0}'.format(err.args[0]))
         print('Exiting.')

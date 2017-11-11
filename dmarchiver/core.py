@@ -15,6 +15,7 @@ import collections
 import datetime
 from enum import Enum
 import os
+import pickle
 import re
 import shutil
 from sys import platform
@@ -265,12 +266,30 @@ class Crawler(object):
         'X-Requested-With': 'XMLHttpRequest'}
 
     _max_id_found = False
+    _session = None
 
-    def authenticate(self, username, password, raw_output):
+    def authenticate(self, username, password, save_session, raw_output):
         login_url = self._twitter_base_url + '/login'
         sessions_url = self._twitter_base_url + '/sessions'
+        messages_url = self._twitter_base_url + '/messages'
 
-        self._session = requests.Session()
+        if save_session:
+            try:
+                with open('dmarchiver_session.dat', 'rb') as file:
+                    self._session = pickle.load(file)
+                    print('dmarchiver_session.dat found. Reusing a previous session, ignoring the provided credentials.')
+                    # Test if the session is still valid
+                    response = self._session.get(messages_url, headers=self._http_headers, allow_redirects=False)
+                    if response.status_code == 200:
+                        return
+                    else:
+                        self._session = None
+                        print('Previous session is invalid. Creating a new session with provided credentials.')
+            except FileNotFoundError:
+                print('dmarchiver_session.dat not found. Creating a new session with provided credentials.')
+
+        if save_session is False or self._session is None:
+            self._session = requests.Session()
 
         if raw_output:
             raw_output_file = open(
@@ -299,6 +318,11 @@ class Crawler(object):
         cookies = requests.utils.dict_from_cookiejar(self._session.cookies)
         if 'auth_token' in cookies:
             print('Authentication succeedeed.{0}'.format(os.linesep))
+            
+            if save_session:
+                # Saving the session locally
+                with open('dmarchiver_session.dat', "wb") as file:
+                    pickle.dump(self._session, file)
         else:
             raise PermissionError(
                 'Your username or password was invalid. Note: DMArchiver does not support multi-factor authentication or application passwords.')
