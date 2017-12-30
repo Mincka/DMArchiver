@@ -22,6 +22,7 @@ from sys import platform
 import time
 import lxml.html
 import requests
+import traceback
 
 __all__ = ['Crawler']
 
@@ -654,9 +655,10 @@ Code {0}: {1}\n'''.format(json['errors'][0]['code'], json['errors'][0]['message'
                     'Script execution interruption requested. Writing the conversation.')
                 self._max_id_found = True
                 break
-            except:
+            except Exception as ex:
                 print(
-                    'Unexpected error for tweet \'{0}\', raw HTML will be used for the tweet.'.format(tweet_id))
+                    'Unexpected error \'{0}\' for tweet \'{1}\', raw HTML will be used for the tweet.'.format(ex, tweet_id))
+                traceback.print_exc()
                 message = DMConversationEntry(
                     tweet_id, '[ParseError] Parsing of tweet \'{0}\' failed. Raw HTML: {1}'.format(
                         tweet_id, value))
