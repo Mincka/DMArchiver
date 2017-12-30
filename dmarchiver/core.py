@@ -519,7 +519,7 @@ Code {0}: {1}\n'''.format(json['errors'][0]['code'], json['errors'][0]['message'
                         shutil.copyfileobj(response.raw, file)
         elif len(gif_url) > 0:
             media_type = MediaType.gif
-            media_style = gif_url[0].find('div').get('style')
+            media_style = gif_url[0].cssselect('div.PlayableMedia-player')[0].get('style')
             media_preview_url = re.findall(r'url\(\'(.*?)\'\)', media_style)[0]
             media_url = media_preview_url.replace(
                 'dm_gif_preview', 'dm_gif').replace('.jpg', '.mp4')
@@ -537,7 +537,7 @@ Code {0}: {1}\n'''.format(json['errors'][0]['code'], json['errors'][0]['message'
                         shutil.copyfileobj(response.raw, file)
         elif len(video_url) > 0:
             media_type = MediaType.video
-            media_style = video_url[0].find('div').get('style')
+            media_style = video_url[0].cssselect('div.PlayableMedia-player')[0].get('style')
             media_preview_url = re.findall(r'url\(\'(.*?)\'\)', media_style)[0]
             media_url = 'https://twitter.com/i/videos/dm/' + tweet_id
             video_url = 'https://mobile.twitter.com/messages/media/' + tweet_id
