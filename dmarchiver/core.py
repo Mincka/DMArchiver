@@ -264,7 +264,10 @@ class Crawler(object):
     _ajax_headers = {
         'User-Agent': _user_agent,
         'Accept': 'application/json, text/javascript, */*; q=0.01',
-        'X-Requested-With': 'XMLHttpRequest'}
+        'Accept-Encoding': 'gzip, deflate, br',
+        'Referer': 'https://twitter.com/?lang=en',
+        'X-Requested-With': 'XMLHttpRequest',
+        'X-Twitter-Active-User': 'yes'}
 
     _max_id_found = False
     _session = None

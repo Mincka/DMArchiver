@@ -101,3 +101,5 @@ files.txt
 /mp4
 
 .vscode/
+dmarchiver_session.dat
+*.txt
