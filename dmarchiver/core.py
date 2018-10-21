@@ -493,7 +493,10 @@ Code {0}: {1}\n'''.format(json['errors'][0]['code'], json['errors'][0]['message'
         img_url = element.find('.//img')
         gif_url = element.cssselect('div.PlayableMedia--gif')
         video_url = element.cssselect('div.PlayableMedia--video')
-
+        
+        # Force the referer again because it may get lost during the session
+        self._session.headers.update({'Referer': 'https://twitter.com/?lang=en'})
+        
         if img_url is not None:
             media_url = img_url.get('data-full-img')
             media_alt = img_url.get('alt')
