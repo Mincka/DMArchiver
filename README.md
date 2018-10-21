@@ -135,7 +135,7 @@ for (var i = 0; i < conversations.length; i++) {
   threadId = conversations[i].getElementsByClassName('DMInboxItem')[0].getAttribute('data-thread-id');
   fullName = conversations[i].getElementsByClassName('fullname')[0];
   var p = document.createElement("p");
-  var t = document.createTextNode("The conversation_id for \"" + fullName.innerHTML + "\" is \"" + threadId + "\""); 
+  var t = document.createTextNode("The conversation_id for \"" + fullName.innerHTML.replace(/<img\s+.*?class="\s*Emoji\s*.*?".*?alt="(.*?)".*?>/g, "$1") + "\" is \"" + threadId + "\""); 
   p.appendChild(t);                                
   conversations[i].parentNode.insertBefore(p, conversations[i]);
 }
