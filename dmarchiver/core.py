@@ -375,6 +375,9 @@ Code {0}: {1}\n'''.format(json['errors'][0]['code'], json['errors'][0]['message'
                     messages_url = self._twitter_base_url + '/inbox/paginate?is_trusted=true&max_entry_id=' + \
                         json['inner']['trusted']['min_entry_id']
                 else:
+                    if json['trusted']['is_empty'] is True:
+                        break
+                    
                     threads += json['trusted']['threads']
 
                     if json['trusted']['has_more'] is False:
@@ -387,9 +390,9 @@ Code {0}: {1}\n'''.format(json['errors'][0]['code'], json['errors'][0]['message'
                 
             except KeyError as ex:
                 print(
-                    'Unable to fully parse the list of the conversations. \
-                     Maybe your account is locked or Twitter has updated the HTML code. \
-                     Use -r to get the raw output and post an issue on GitHub. \
+                    'Unable to fully parse the list of the conversations.\n \
+                     Maybe your account is locked or Twitter has updated the HTML code.\n \
+                     Use -r to get the raw output and post an issue on GitHub.\n \
                      Exception: {0}'.format(str(ex)))
                 break
             
