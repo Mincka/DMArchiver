@@ -582,7 +582,7 @@ Code {0}: {1}\n'''.format(json['errors'][0]['code'], json['errors'][0]['message'
             card.get('data-card-url'),
             card.get('data-card-name'))
 
-    def _process_tweets(self, tweets, download_images, download_gifs, download_videos, max_id):
+    def _process_tweets(self, tweets, download_images, download_gifs, download_videos, twitter_handle, max_id):
         conversation_set = collections.OrderedDict()
         ordered_tweets = sorted(tweets, reverse=True)
 
@@ -617,11 +617,14 @@ Code {0}: {1}\n'''.format(json['errors'][0]['code'], json['errors'][0]['message'
                     'div.DMConversationEntry')
 
                 if len(dm_container) > 0:
-                    dm_avatar = dm_container[0].cssselect(
-                        'img.DMAvatar-image')[0]
-                    dm_author = dm_avatar.get('alt')
-
-                    # print(dm_author)
+                    if twitter_handle:
+                        dm_avatar = dm_container[0].cssselect(
+                            'div.DirectMessage-avatar a')[0]
+                        dm_author = dm_avatar.get('href')[1:]
+                    else:
+                        dm_avatar = dm_container[0].cssselect(
+                            'img.DMAvatar-image')[0]
+                        dm_author = dm_avatar.get('alt')
 
                     dm_footer = document.cssselect('div.DirectMessage-footer')
                     time_stamp = dm_footer[0].cssselect('span._timestamp')[
@@ -684,6 +687,7 @@ Code {0}: {1}\n'''.format(json['errors'][0]['code'], json['errors'][0]['message'
             download_images=False,
             download_gifs=False,
             download_videos=False,
+            twitter_handle=False,
             raw_output=False):
 
         raw_output_file = None
@@ -740,7 +744,7 @@ Code {0}: {1}\n'''.format(json['errors'][0]['code'], json['errors'][0]['message'
 
                 # Get tweets for the current request
                 conversation_set = self._process_tweets(
-                    tweets, download_images, download_gifs, download_videos, max_id)
+                    tweets, download_images, download_gifs, download_videos, twitter_handle, max_id)
 
                 # Append to the whole conversation
                 for tweet_id in conversation_set:

@@ -19,6 +19,8 @@
       -dg, --download-gifs  Download GIFs (as MP4)
       -dv, --download-videos
                             Download videos (as MP4)
+	  -th,  --twitter-handle     
+	                        Use the Twitter handles instead of the display names	
       -r, --raw-output  Write the raw HTML to a file
 """
 
@@ -64,6 +66,11 @@ def main():
         help="Download videos (as MP4)",
         action="store_true")
     parser.add_argument(
+        "-th",
+        "--twitter-handle",
+        help="Use the Twitter handles instead of the display names",
+        action="store_true")
+    parser.add_argument(
         "-r",
         "--raw-output",
         help="Write the raw HTML to a file",
@@ -106,7 +113,7 @@ def main():
                 conversation_id,
                 args.delay,
                 args.download_images,
-                args.download_gifs, args.download_videos, args.raw_output)
+                args.download_gifs, args.download_videos, args.twitter_handle, args.raw_output)
         else:
             print('Conversation ID not specified. Retrieving all the threads.')
             threads = crawler.get_threads(args.delay, args.raw_output)
@@ -114,7 +121,7 @@ def main():
 
             for thread_id in threads:
                 crawler.crawl(thread_id, args.delay, args.download_images,
-                              args.download_gifs, args.download_videos, args.raw_output)
+                              args.download_gifs, args.download_videos, args.twitter_handle, args.raw_output)
                 time.sleep(args.delay)
     except KeyboardInterrupt:
         print('Script execution interruption requested. Exiting.')

@@ -3,9 +3,6 @@
 # DMArchiver
 A tool to archive **all** the direct messages from your private conversations on Twitter.
 
-## Warning: possible account lockout
-Users are starting to report account lockouts because of the use of this tool. Twitter seems to lock accounts more aggressively if a new login context is detected. Even though locking can be reverted, you should be aware of this risk when using this tool. An additional attempt after unlocking can allow the tool to perform better on the second run.
-
 ## Introduction
 Have you ever need to retrieve old information from a chat with your friends on Twitter? Or maybe you would just like to backup all these cheerful moments and keep them safe.
 
@@ -27,11 +24,17 @@ The script does not leverage the Twitter API because of its very restrictive lim
 
 Because it is still possible to retrieve older messages from a Conversation by scrolling up, this script only simulates this behavior to automatically get the messages.
 
-**Warning:**
-Because this script leverages an unsupported method to retrieve the tweets, it may break at any time. Indeed, Twitter may change the output code without warning. If you get errors you did not have previously, please check if new releases of the tool are available.
+**Warning: possible account lockout**
+
+A few users have reported account lockouts because of the use of this tool. Twitter seems to lock accounts more aggressively if a new login context is detected. Even though locking can be reverted, you should be aware of this risk when using this tool. An additional attempt after unlocking can allow the tool to perform better on the second run.
+
+If you need to run the tool multiple times, it is also recommended to use the `-s` parameter to reuse cookies from a previous session. You will not receive a new login warning by e-mail since the tool will reuse an existing session.
 
 **Disclaimer:**
+
 Using this tool will only behave like you using the Twitter web site with your browser, so there is nothing illegal to use it to retrieve your own data. However, depending on your conversations' length, it may trigger a lot of requests to the site that could be suspicious for Twitter.  In this case, Twitter could lock preemptively the account.
+
+Because this script leverages an unsupported method to retrieve the tweets, it may break at any time. Indeed, Twitter may change the output code without warning. If you get errors you did not have previously, please check if new releases of the tool are available.
 
 ## Installation & Quick start
 
@@ -97,6 +100,8 @@ $ dmarchiver --help
 	  -dg, --download-gifs  Download GIFs (as MP4)
 	  -dg, --download-videos
 	                        Download videos (as MP4)
+	  -th,  --twitter-handle     
+	                        Use the Twitter handles instead of the display names						
 	  -r, --raw-output      Write the raw HTML to a file
 ```
 
@@ -111,14 +116,14 @@ The script output will be the `645754097571131337.txt` file with the conversatio
 
 The images and videos files can be respectively found in the `645754097571131337/images` and `645754097571131337/mp4-*` folders.
 
-#### Archive a specific conversation:
+#### Archive a specific conversation, and use the Twitter handles for the usernames:
 To retrieve only one conversation with the ID `645754097571131337`:
 
 ```
-$ dmarchiver -id "645754097571131337"
+$ dmarchiver -id "645754097571131337" -th
 ```
 
-The script output will be the `645754097571131337.txt` file with the conversation formatted in an _IRC-like_ style.
+The script output will be the `645754097571131337.txt` file with the conversation formatted in an _IRC-like_ style, using the Twitter handles instead of the display names.
 
 #### How to get a `conversation_id`?
 
@@ -145,8 +150,10 @@ for (var i = 0; i < conversations.length; i++) {
 You can also specify the username and the password in the options. Because DMArchiver is able to perform incremental updates, you can schedule a task or create a shortcut with the following arguments:
 
 ```
-$ dmarchiver -id "conversation_id" -di -dg -dv -u your_username -p your_password
+$ dmarchiver -id "conversation_id" -di -dg -dv -u your_username -p your_password -s
 ```
+
+Note the usage of the `-s` flag to use an existing session, instead of creating a new one.
 
 ## Development
 
