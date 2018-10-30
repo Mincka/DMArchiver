@@ -98,7 +98,7 @@ $ dmarchiver --help
 	  -di, --download-images
 	                        Download images
 	  -dg, --download-gifs  Download GIFs (as MP4)
-	  -dg, --download-videos
+	  -dv, --download-videos
 	                        Download videos (as MP4)
 	  -th,  --twitter-handle     
 	                        Use the Twitter handles instead of the display names						
