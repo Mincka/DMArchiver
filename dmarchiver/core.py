@@ -261,6 +261,9 @@ class Crawler(object):
 
     _http_headers = {
         'User-Agent': _user_agent}
+    _login_headers = {
+        'User-Agent': _user_agent,
+        'Referer': 'https://mobile.twitter.com/login'}    
     _ajax_headers = {
         'User-Agent': _user_agent,
         'Accept': 'application/json, text/javascript, */*; q=0.01',
@@ -273,6 +276,7 @@ class Crawler(object):
     _session = None
 
     def authenticate(self, username, password, save_session, raw_output):
+        force_nojs = 'https://mobile.twitter.com/i/nojs_router?path=%2Flogin'
         login_url = self._twitter_base_url + '/login'
         sessions_url = self._twitter_base_url + '/sessions'
         messages_url = self._twitter_base_url + '/messages'
@@ -299,15 +303,15 @@ class Crawler(object):
             raw_output_file = open(
                 'authentication-{0}.txt'.format(username), 'wb')
 
-        response = self._session.get(
-            login_url,
-            headers=self._http_headers)
+        response = self._session.post(
+            force_nojs,
+            headers=self._login_headers)
 
         if raw_output:
             raw_output_file.write(response.content)
             raw_output_file.close()
 
-        document = lxml.html.document_fromstring(response.text)
+        document = lxml.html.document_fromstring(response.content)
         authenticity_token = document.xpath(
             '//input[@name="authenticity_token"]/@value')[0]
 
