@@ -37,7 +37,7 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: PyInstaller
       run: |
-        pyinstaller --onefile dmarchiver\cmdline.py --paths=dmarchiver -n dmarchiver --hidden-import queue
+        pyinstaller --onefile dmarchiver\cmdline.py --paths=dmarchiver -n dmarchiver.exe --hidden-import queue
     - uses: actions/upload-artifact@v1
       with:
         name: dmarchiver-windows
