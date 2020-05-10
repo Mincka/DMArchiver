@@ -125,27 +125,6 @@ $ dmarchiver -id "645754097571131337" -th
 
 The script output will be the `645754097571131337.txt` file with the conversation formatted in an _IRC-like_ style, using the Twitter handles instead of the display names.
 
-#### How to get a `conversation_id`?
-
-The `conversation_id` is the identifier of a specific conversation you want to backup.
-
-- Click on the "Messages" button on Twitter.
-- Press the F12 key and go to the "Console" tab of your browser.
-- Past and execute the following JavaScript code to show the IDs next to the conversation titles:
-
-```javascript
-conversations = document.getElementsByClassName('DMInbox-conversationItem')
-
-for (var i = 0; i < conversations.length; i++) {
-  threadId = conversations[i].getElementsByClassName('DMInboxItem')[0].getAttribute('data-thread-id');
-  fullName = conversations[i].getElementsByClassName('fullname')[0];
-  var p = document.createElement("p");
-  var t = document.createTextNode("The conversation_id for \"" + fullName.innerHTML.replace(/<img\s+.*?class="\s*Emoji\s*.*?".*?alt="(.*?)".*?>/g, "$1") + "\" is \"" + threadId + "\""); 
-  p.appendChild(t);                                
-  conversations[i].parentNode.insertBefore(p, conversations[i]);
-}
-```
-
 #### Schedule a task to perform incremental backups of a conversation
 You can also specify the username and the password in the options. Because DMArchiver is able to perform incremental updates, you can schedule a task or create a shortcut with the following arguments:
 
