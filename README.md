@@ -1,3 +1,10 @@
+# DMArchiver is currently broken
+**2020-08-16**
+
+Due to recent changes on Twitter, the method originally used by DMArchiver will no longer work. There won't be a quick fix as it requires a major rewrite.
+
+The issue is tracked here: https://github.com/Mincka/DMArchiver/issues/83
+
 [![GitHub release](https://img.shields.io/github/release/Mincka/DMArchiver.svg)](https://github.com/Mincka/DMArchiver/releases) [![PyPI](https://img.shields.io/pypi/v/DMArchiver.svg)](https://pypi.python.org/pypi/dmarchiver) [![Github All Releases](https://img.shields.io/github/downloads/Mincka/DMArchiver/total.svg)](http://www.somsubhra.com/github-release-stats/?username=Mincka&repository=DMArchiver) [![Windows package](https://github.com/Mincka/DMArchiver/workflows/Windows%20package/badge.svg)](https://github.com/Mincka/DMArchiver/actions?query=workflow%3A%22Windows+package%22) [![Ubuntu package](https://github.com/Mincka/DMArchiver/workflows/Ubuntu%20package/badge.svg)](https://github.com/Mincka/DMArchiver/actions?query=workflow%3A%22Ubuntu+package%22) [![macOS package](https://github.com/Mincka/DMArchiver/workflows/macOS%20package/badge.svg)](https://github.com/Mincka/DMArchiver/actions?query=workflow%3A%22macOS+package%22) 
 
 # DMArchiver
