@@ -445,7 +445,7 @@ Code {0}: {1}\n'''.format(json['errors'][0]['code'], json['errors'][0]['message'
 
                 if result:
                     print('Latest tweet ID found in previous dump. Incremental update.')
-                    return result.group(1), {'max_id': result.group(1)}
+                    return result.group(1)
                 else:
                     print(
                         'Latest tweet ID not found in previous dump. Creating a new one with incremental support.')
@@ -453,7 +453,7 @@ Code {0}: {1}\n'''.format(json['errors'][0]['code'], json['errors'][0]['message'
             print(
                 "Previous conversation not found. Creating a new one with incremental support.")
 
-        return '0', {}
+        return '0'
 
     def _get_media_url(self, variants):
         return sorted(variants, key = lambda i: i['bitrate'] if 'bitrate' in i else -1, reverse=True)[0]['url']
@@ -632,7 +632,8 @@ Code {0}: {1}\n'''.format(json['errors'][0]['code'], json['errors'][0]['message'
             os.linesep, conversation_id))
 
         # Attempt to find the latest tweet id of a previous crawl session
-        max_id, payload = self._get_latest_tweet_id(conversation_id)
+        max_id = self._get_latest_tweet_id(conversation_id)
+        payload = {}
 
         self._conversation_id = conversation_id
         conversation = Conversation(conversation_id)
