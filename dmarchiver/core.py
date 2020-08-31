@@ -23,6 +23,13 @@ import time
 import lxml.html
 import requests
 import traceback
+from ratelimit import limits
+import random
+from json import dump as json_dump
+
+API_LIMIT = 900
+API_RESET = 900
+DEFAULT_BEARER_TOKEN = 'AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA'
 
 __all__ = ['Crawler']
 
@@ -34,7 +41,6 @@ def expand_url(url):
 
     response = requests.get(url, allow_redirects=False)
     return response.headers['location']
-
 
 class Conversation(object):
     """This class is a representation of a complete conversation"""
@@ -178,28 +184,6 @@ class DirectMessageTweet(object):
         return '[Tweet] {0}'.format(self._tweet_url)
 
 
-class DirectMessageCard(object):
-    """ This class is a representation of a card.
-    A card is a preview of a posted link.
-    This is an "element" of the Direct Message.
-    """
-
-    _card_url = ''
-    _card_name = ''
-    _expanded_url = ''
-
-    def __init__(self, card_url, card_name):
-        self._card_url = card_url
-        self._card_name = card_name
-        if 'https://t.co/' in card_url:
-            self._expanded_url = expand_url(card_url)
-        else:
-            self._expanded_url = card_url
-
-    def __str__(self):
-        return '[Card-{1}] {0}'.format(self._expanded_url, self._card_name)
-
-
 class MediaType(Enum):
     """ This class is a representation of the possible media types."""
 
@@ -219,12 +203,13 @@ class DirectMessageMedia(object):
     _media_url = ''
     _media_alt = ''
     _media_type = ''
+    _media_replace_url = ''
 
-    def __init__(self, media_url, media_preview_url, media_alt, media_type):
+    def __init__(self, media_url, media_preview_url, media_type, media_replace_url):
         self._media_url = media_url
         self._media_preview_url = media_preview_url
-        self._media_alt = media_alt
         self._media_type = media_type
+        self._media_replace_url = media_replace_url
 
     def __repr__(self):
         # Todo
@@ -232,15 +217,12 @@ class DirectMessageMedia(object):
             self.__class__.__name__,
             self._media_url,
             self._media_preview_url,
-            self._media_alt)
+            self._media_replace_url)
 
     def __str__(self):
         if self._media_preview_url != '':
             return '[Media-{0}] {1} [Media-preview] {2}'.format(
                 self._media_type.name, self._media_url, self._media_preview_url)
-        elif self._media_alt != '':
-            return '[Media-{0}] [{1}] {2}'.format(
-                self._media_type.name, self._media_alt, self._media_url)
         else:
             return '[Media-{0}] {1}'.format(
                 self._media_type.name, self._media_url)
@@ -253,32 +235,49 @@ class Crawler(object):
     """
 
     _twitter_base_url = 'https://twitter.com'
+    _referer_url     = 'https://twitter.com/messages/{}'
+    _bearer_token_url = 'https://abs.twimg.com/responsive-web/client-web/main.05e1f885.js'
+    _api_url          = 'https://api.twitter.com'
+
     _user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.89 Safari/537.36'
     if platform == 'darwin':
         _user_agent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13) AppleWebKit/603.1.13 (KHTML, like Gecko) Version/10.1 Safari/603.1.13'
     elif platform == 'linux' or platform == 'linux2':
-        _user_agent = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3184.0 Safari/537.36'
+        _user_agent = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36'
 
     _http_headers = {
         'User-Agent': _user_agent}
     _login_headers = {
         'User-Agent': _user_agent,
-        'Referer': 'https://mobile.twitter.com/login'}    
+        'Referer': 'https://mobile.twitter.com/login'}
     _ajax_headers = {
+        'user-agent': _user_agent,
+        'accept': '*/*',
+        'accept-encoding': 'gzip, deflate, br',
+        'referer': 'https://mobile.twitter.com',
+        'x-twitter-active-user': 'yes',
+        'origin': 'https://twitter.com',
+        'accept-language': 'en-US,en-GB;q=0.9,en;q=0.8'}
+    _api_headers = {
         'User-Agent': _user_agent,
-        'Accept': 'application/json, text/javascript, */*; q=0.01',
+        'Accept': '*/*',
         'Accept-Encoding': 'gzip, deflate, br',
-        'Referer': 'https://twitter.com/?lang=en',
-        'X-Requested-With': 'XMLHttpRequest',
-        'X-Twitter-Active-User': 'yes'}
+        'Accept-Language': 'en-US,en-GB;q=0.9,en;q=0.8',
+        'Origin': 'https://twitter.com',
+        'Sec-Fetch-Dest': 'empty',
+        'Sec-Fetch-Site': 'same-site',
+        'X-Twitter-Active-User': 'yes',
+        'X-Twitter-Auth-Type': 'OAuth2Session',
+        'X-Twitter-Client-Language': 'en'}
 
     _max_id_found = False
     _session = None
 
-    def authenticate(self, username, password, save_session, raw_output):
+    def authenticate(self, username, password, save_session, raw_output, mfa_token=None):
         force_nojs = 'https://mobile.twitter.com/i/nojs_router?path=%2Flogin'
-        login_url = self._twitter_base_url + '/login'
-        sessions_url = self._twitter_base_url + '/sessions'
+        login_url = 'https://mobile.twitter.com/login'
+        mfa_url = 'https://mobile.twitter.com/account/login_verification'
+        sessions_url = 'https://mobile.twitter.com/sessions'
         messages_url = self._twitter_base_url + '/messages'
 
         if save_session:
@@ -315,7 +314,7 @@ class Crawler(object):
         authenticity_token = document.xpath(
             '//input[@name="authenticity_token"]/@value')[0]
 
-        payload = {'session[username_or_email]': username,
+        payload = {'session[username_or_email]': str(username),
                    'session[password]': password,
                    'authenticity_token': authenticity_token}
 
@@ -323,17 +322,47 @@ class Crawler(object):
             sessions_url,
             headers=self._ajax_headers,
             params=payload)
+
+        if mfa_token is not None and 'auth_token' not in dict(self._session.cookies):
+            document = lxml.html.document_fromstring(response.content)
+            challenge_id = document.xpath('//input[@name="challenge_id"]/@value')[0]
+            user_id      = document.xpath('//input[@name="user_id"]/@value')[0]
+            payload = {
+                'challenge_type': 'Totp',
+                'user_id': user_id,
+                'platform': 'web',
+                'challenge_response': str(mfa_token),
+                'challenge_id': challenge_id,
+                'authenticity_token': authenticity_token}
+            response = self._session.post(mfa_url, headers=self._ajax_headers, params=payload)
+
         cookies = requests.utils.dict_from_cookiejar(self._session.cookies)
         if 'auth_token' in cookies:
             print('Authentication succeedeed.{0}'.format(os.linesep))
-            
+
             if save_session:
                 # Saving the session locally
                 with open('dmarchiver_session.dat', "wb") as file:
                     pickle.dump(self._session, file)
         else:
             raise PermissionError(
-                'Your username or password was invalid. Note: DMArchiver does not support multi-factor authentication or application passwords.')
+                'Your username or password was invalid. Note: DMArchiver supports multi-factor authentication (provided at command-line), but not application passwords.')
+
+    def _get_bearer_token(self):
+        try:
+            response = self._session.get(self._bearer_token_url)
+            return 'Bearer {}'.format(re.findall('(AAAAAA.*?)\"',str(response.content))[0])
+        except:
+            return 'Bearer {}'.format(DEFAULT_BEARER_TOKEN)
+
+    def _cookie_string(self):
+        cookies = dict(self._session.cookies)
+        csrf_token = ''.join(random.choice('1234567890abcdef') for i in range(32))
+        cookies['ct0'] = csrf_token
+        self._api_headers['x-csrf-token'] = csrf_token
+        self._api_headers['Authorization'] = self._get_bearer_token()
+        return "; ".join([str(x)+"="+str(y) for x,y in cookies.items()])
+
 
     def get_threads(self, delay, raw_output):
         threads = []
@@ -381,7 +410,7 @@ Code {0}: {1}\n'''.format(json['errors'][0]['code'], json['errors'][0]['message'
                 else:
                     if json['trusted']['is_empty'] is True:
                         break
-                    
+
                     threads += json['trusted']['threads']
 
                     if json['trusted']['has_more'] is False:
@@ -391,7 +420,7 @@ Code {0}: {1}\n'''.format(json['errors'][0]['code'], json['errors'][0]['message'
                                'max_entry_id': json['trusted']['min_entry_id']}
                     messages_url = self._twitter_base_url + '/inbox/paginate?is_trusted=true&max_entry_id=' + \
                         json['trusted']['min_entry_id']
-                
+
             except KeyError as ex:
                 print(
                     'Unable to fully parse the list of the conversations.\n \
@@ -399,7 +428,7 @@ Code {0}: {1}\n'''.format(json['errors'][0]['code'], json['errors'][0]['message'
                      Use -r to get the raw output and post an issue on GitHub.\n \
                      Exception: {0}'.format(str(ex)))
                 break
-            
+
             time.sleep(delay)
         if raw_output:
             raw_output_file.close()
@@ -416,7 +445,7 @@ Code {0}: {1}\n'''.format(json['errors'][0]['code'], json['errors'][0]['message'
 
                 if result:
                     print('Latest tweet ID found in previous dump. Incremental update.')
-                    return result.group(1)
+                    return result.group(1), {'max_id': result.group(1)}
                 else:
                     print(
                         'Latest tweet ID not found in previous dump. Creating a new one with incremental support.')
@@ -424,89 +453,27 @@ Code {0}: {1}\n'''.format(json['errors'][0]['code'], json['errors'][0]['message'
             print(
                 "Previous conversation not found. Creating a new one with incremental support.")
 
-        return '0'
+        return '0', {}
 
-    def _extract_dm_text_url(self, element, expanding_mode='only_expanded'):
-        raw_url = ''
-        if expanding_mode == 'only_expanded':
-            raw_url = element.get('data-expanded-url')
-        elif expanding_mode == 'only_short':
-            raw_url = element.get('href')
-        elif expanding_mode == 'short_and_expanded':
-            raw_url = '{0} [{1}]'.format(element.get(
-                'href'), element.get('data-expanded-url'))
-        return raw_url
+    def _get_media_url(self, variants):
+        return sorted(variants, key = lambda i: i['bitrate'] if 'bitrate' in i else -1, reverse=True)[0]['url']
 
-    def _extract_dm_text_hashtag(self, element):
-        raw_hashtag = element.text_content()
-        if element.tail is not None:
-            raw_hashtag += element.tail
-        return raw_hashtag
-
-    def _extract_dm_text_atreply(self, element):
-        raw_atreply = element.text_content()
-        if element.tail is not None:
-            raw_atreply += element.tail
-        return raw_atreply
-
-    # Todo: Implement parsing options
-    def _extract_dm_text_emoji(self, element):
-        raw_emoji = '{0}'.format(element.get('alt'))
-        if element.tail is not None:
-            raw_emoji += element.tail
-        return raw_emoji
-
-    def _parse_dm_text(self, element):
-        dm_text = ''
-        text_tweet = element.cssselect("p.tweet-text")[0]
-        for text in text_tweet.iter('p', 'a', 'img'):
-            if text.tag == 'a':
-                # External link
-                if 'twitter-timeline-link' in text.classes:
-                    dm_text += self._extract_dm_text_url(text)
-                # #hashtag
-                elif 'twitter-hashtag' in text.classes:
-                    dm_text += self._extract_dm_text_hashtag(text)
-                # @identifier
-                elif 'twitter-atreply' in text.classes:
-                    dm_text += self._extract_dm_text_atreply(text)
-                else:
-                    # Unable to identify the link type, raw HTML output
-                    dm_text += lxml.html.tostring(text).decode('UTF-8')
-            # Emoji
-            elif text.tag == 'img' and 'Emoji' in text.classes:
-                dm_text += self._extract_dm_text_emoji(text)
-            else:
-                if text.text is not None:
-                    dm_text += text.text
-        return DirectMessageText(dm_text)
-
-    def _parse_dm_media(
-            self,
-            element,
-            tweet_id,
-            time_stamp,
-            download_images,
-            download_gifs,
-            download_videos):
+    def _parse_dm_media(self, type, media, tweet_id, time_stamp, download):
         media_url = ''
         media_preview_url = ''
         media_alt = ''
+        media_replace_url = ''
         media_type = MediaType.unknown
 
         formatted_timestamp = datetime.datetime.fromtimestamp(
             int(time_stamp)).strftime('%Y%m%d-%H%M%S')
 
-        img_url = element.find('.//img')
-        gif_url = element.cssselect('div.PlayableMedia--gif')
-        video_url = element.cssselect('div.PlayableMedia--video')
-        
-        # Force the referer again because it may get lost during the session
         self._session.headers.update({'Referer': 'https://twitter.com/?lang=en'})
-        
-        if img_url is not None:
-            media_url = img_url.get('data-full-img')
-            media_alt = img_url.get('alt')
+
+        media_replace_url = media['expanded_url']
+
+        if type == 'photo':
+            media_url = media['media_url_https']
             media_filename_re = re.findall(r'/\d+/(.+)/(.+)$', media_url)
             media_sticker_filename_re = re.findall(
                 '/stickers/stickers/(.+)$', media_url)
@@ -514,7 +481,7 @@ Code {0}: {1}\n'''.format(json['errors'][0]['code'], json['errors'][0]['message'
             if len(media_filename_re) > 0:
                 media_type = MediaType.image
                 media_filename = '{0}-{1}-{2}-{3}'.format(
-                    formatted_timestamp, tweet_id, media_filename_re[0][0], media_filename_re[0][1])
+                    formatted_timestamp, media['id'], media_filename_re[0][0], media_filename_re[0][1])
             elif len(media_sticker_filename_re) > 0:
                 # It is a sticker
                 media_type = MediaType.sticker
@@ -522,150 +489,108 @@ Code {0}: {1}\n'''.format(json['errors'][0]['code'], json['errors'][0]['message'
             else:
                 # Unknown media type
                 print("Unknown media type")
-            if media_filename is not None and download_images:
-                response = self._session.get(media_url, stream=True)
+            if media_filename is not None and download:
+                response = self._session.get(media_url, headers=self._api_headers, stream=True)
                 if response.status_code == 200:
                     os.makedirs(
                         '{0}/images'.format(self._conversation_id), exist_ok=True)
                     with open('{0}/images/{1}'.format(self._conversation_id, media_filename), 'wb') as file:
-                        response.raw.decode_content = True
-                        shutil.copyfileobj(response.raw, file)
-        elif len(gif_url) > 0:
+                        file.write(response.content)
+
+        elif type == 'animated_gif':
             media_type = MediaType.gif
-            media_style = gif_url[0].cssselect('div.PlayableMedia-player')[0].get('style')
-            media_preview_url = re.findall(r'url\(\'(.*?)\'\)', media_style)[0]
-            media_url = media_preview_url.replace(
-                'dm_gif_preview', 'dm_gif').replace('.jpg', '.mp4')
+            media_preview_url = media['media_url_https']
+            media_url = self._get_media_url(media['video_info']['variants'])
             media_filename_re = re.findall(r'dm_gif/(.+)/(.+)$', media_url)
             media_filename = '{0}-{1}-{2}'.format(formatted_timestamp, media_filename_re[0][
                 0], media_filename_re[0][1])
 
-            if download_gifs:
+            if download:
                 response = self._session.get(media_url, stream=True)
                 if response.status_code == 200:
                     os.makedirs(
                         '{0}/mp4-gifs'.format(self._conversation_id), exist_ok=True)
                     with open('{0}/mp4-gifs/{1}'.format(self._conversation_id, media_filename), 'wb') as file:
-                        response.raw.decode_content = True
-                        shutil.copyfileobj(response.raw, file)
-        elif len(video_url) > 0:
+                        file.write(response.content)
+
+        elif type == 'video':
             media_type = MediaType.video
-            media_style = video_url[0].cssselect('div.PlayableMedia-player')[0].get('style')
-            media_preview_url = re.findall(r'url\(\'(.*?)\'\)', media_style)[0]
-            media_url = 'https://twitter.com/i/videos/dm/' + tweet_id
-            video_url = 'https://mobile.twitter.com/messages/media/' + tweet_id
+            media_preview_url = media['media_url_https']
+            media_url = self._get_media_url(media['video_info']['variants'])
             media_filename = '{0}-{1}.mp4'.format(
                 formatted_timestamp, tweet_id)
 
-            if download_videos:
-                response = self._session.get(video_url, stream=True)
+            if download:
+                response = self._session.get(media_url, stream=True)
                 if response.status_code == 200:
                     os.makedirs(
                         '{0}/mp4-videos'.format(self._conversation_id), exist_ok=True)
                     with open('{0}/mp4-videos/{1}'.format(self._conversation_id, media_filename), 'wb') as file:
-                        response.raw.decode_content = True
-                        shutil.copyfileobj(response.raw, file)
+                        file.write(response.content)
 
         else:
             print('Unknown media')
 
-        return DirectMessageMedia(media_url, media_preview_url, media_alt, media_type)
+        return DirectMessageMedia(media_url, media_preview_url, media_type, media_replace_url)
 
-    def _parse_dm_tweet(self, element):
-        tweet_url = ''
-        tweet_url = element.cssselect('a.QuoteTweet-link')[0]
-        tweet_url = '{0}{1}'.format(
-            self._twitter_base_url, tweet_url.get('href'))
-        return DirectMessageTweet(tweet_url)
+    def _process_tweets(self, tweets, users, download, max_id):
+        conversation_set = {}
 
-    def _parse_dm_card(self, element):
-        card_url = ''
-        card = element.cssselect(
-            'div[class^=" card-type-"], div[class*=" card-type-"]')[0]
-        return DirectMessageCard(
-            card.get('data-card-url'),
-            card.get('data-card-name'))
-
-    def _process_tweets(self, tweets, download_images, download_gifs, download_videos, twitter_handle, max_id):
-        conversation_set = collections.OrderedDict()
-        ordered_tweets = sorted(tweets, reverse=True)
-
-        # DirectMessage-message
-        # -- DirectMessage-text
-        # -- DirectMessage-media
-        # -- DirectMessage-tweet
-        # -- DirectMessage-card
-
-        for tweet_id in ordered_tweets:
-            dm_author = ''
-            message = ''
-            dm_element_text = ''
-            value = tweets[tweet_id]
-
-            # If we reached the previous max tweet id,
-            # we stop the execution
-            if tweet_id == max_id:
-                self._max_id_found = True
-                print('Previous tweet limit found.')
-                break
-
+        for tweet_container in tweets:
             try:
-                document = lxml.html.fragment_fromstring(value)
+                for type, t in tweet_container.items():
+                    tweet_type = type
+                    tweet_id = t['id']
+                    tweet = t
 
-                dm_container = document.cssselect(
-                    'div.DirectMessage-container')
+                if tweet_id == max_id:
+                    self._max_id_found = True
+                    print('Previous tweet limit found.')
+                    break
 
-                # Generic messages such as "X has join the group" or "The group has
-                # been renamed"
-                dm_conversation_entry = document.cssselect(
-                    'div.DMConversationEntry')
+                time_stamp = tweet['time'][:10]
 
-                if len(dm_container) > 0:
-                    if twitter_handle:
-                        dm_avatar = dm_container[0].cssselect(
-                            'div.DirectMessage-avatar a')[0]
-                        dm_author = dm_avatar.get('href')[1:]
-                    else:
-                        dm_avatar = dm_container[0].cssselect(
-                            'img.DMAvatar-image')[0]
-                        dm_author = dm_avatar.get('alt')
+                if tweet_type == 'conversation_name_update':
+                    dm_author = tweet['by_user_id']
+                    dm_author_name = users[dm_author]['screen_name']
+                    text = '{} changed the group name to {}'.format(
+                        dm_author_name,
+                        tweet['conversation_name'])
+                    dm_author_name = 'DMConversationEntry'
 
-                    dm_footer = document.cssselect('div.DirectMessage-footer')
-                    time_stamp = dm_footer[0].cssselect('span._timestamp')[
-                        0].get('data-time')
+                elif tweet_type == 'join_conversation' or tweet_type == 'participants_join':
+                    dm_author = tweet['sender_id']
+                    dm_author_name = users[dm_author]['screen_name']
+                    joiners = [users[user['user_id']]['screen_name'] for user in tweet['participants']]
+                    text = '{} added {}.'.format(dm_author_name, ', '.join(joiners))
+                    dm_author_name = 'DMConversationEntry'
 
-                    # DirectMessage-text, div.DirectMessage-media,
-                    # div.DirectMessage-tweet_id, div.DirectMessage-card...
-                    # First select is for non-text messages, second one is for
-                    # text messages, last one is a special case for stickers
-                    dm_elements = document.cssselect(
-                        'div.DirectMessage-message > div.DirectMessage-attachmentContainer > div[class^="DirectMessage-"], div.DirectMessage-message > div.DirectMessage-contentContainer > div[class^="DirectMessage-"], div.DirectMessage-message > div.DirectMessage-media')
+                elif tweet_type == 'leave_conversation' or tweet_type == 'participants_leave':
+                    leavers = [users[user['user_id']]['screen_name'] for user in tweet['participants']]
+                    text = '{} left.'.format(', '.join(leavers))
+                    dm_author_name = 'DMConversationEntry'
 
-                    message = DirectMessage(tweet_id, time_stamp, dm_author)
+                elif tweet_type == 'message':
+                    dm_author = tweet['message_data']['sender_id']
+                    dm_author_name = users[dm_author]['screen_name']
+                    msg = tweet['message_data']
+                    text = msg['text']
 
-                    # Required array cleanup
-                    message.elements = []
-                    for dm_element in dm_elements:
-                        dm_element_type = dm_element.get('class')
-                        if 'DirectMessage-text' in dm_element_type:
-                            element_object = self._parse_dm_text(dm_element)
-                            message.elements.append(element_object)
-                        elif 'DirectMessage-media' in dm_element_type:
-                            element_object = self._parse_dm_media(
-                                dm_element, tweet_id, time_stamp, download_images, download_gifs, download_videos)
-                            message.elements.append(element_object)
-                        elif 'DirectMessage-tweet' in dm_element_type:
-                            element_object = self._parse_dm_tweet(dm_element)
-                            message.elements.append(element_object)
-                        elif 'DirectMessage-card' in dm_element_type:
-                            element_object = self._parse_dm_card(dm_element)
-                            message.elements.append(element_object)
-                        else:
-                            print('Unknown element type')
+                    if 'entities' in msg and 'urls' in msg['entities']:
+                        for url in msg['entities']['urls']:
+                            text = text.replace(url['url'], url['expanded_url'])
 
-                elif len(dm_conversation_entry) > 0:
-                    dm_element_text = dm_conversation_entry[0].text.strip()
-                    message = DMConversationEntry(tweet_id, dm_element_text)
+                    if 'attachment' in msg:
+                        for k, v in msg['attachment'].items():
+                            element = self._parse_dm_media(k, v, tweet_id, time_stamp, download[k])
+                            text = text.replace(element._media_replace_url, str(element))
+
+                else: # unknown type
+                    raise Exception
+
+                message = DirectMessage(tweet_id, time_stamp, dm_author_name)
+                message.elements = [DirectMessageText(text)]
+
             except KeyboardInterrupt:
                 print(
                     'Script execution interruption requested. Writing the conversation.')
@@ -673,16 +598,20 @@ Code {0}: {1}\n'''.format(json['errors'][0]['code'], json['errors'][0]['message'
                 break
             except Exception as ex:
                 print(
-                    'Unexpected error \'{0}\' for tweet \'{1}\', raw HTML will be used for the tweet.'.format(ex, tweet_id))
+                    'Unexpected error \'{0}\' for tweet \'{1}\', raw JSON will be used for the tweet.'.format(ex, tweet_id))
                 traceback.print_exc()
                 message = DMConversationEntry(
-                    tweet_id, '[ParseError] Parsing of tweet \'{0}\' failed. Raw HTML: {1}'.format(
-                        tweet_id, value))
+                    tweet_id, '[ParseError] Parsing of tweet \'{0}\' failed. Raw JSON: {1}'.format(
+                        tweet_id, tweet))
 
             if message is not None:
                 conversation_set[tweet_id] = message
 
         return conversation_set
+
+    @limits(calls=API_LIMIT, period=API_RESET)
+    def _api_call(self, url, headers, payload):
+       return self._session.get(url, headers=headers, params=payload)
 
     def crawl(
             self,
@@ -691,7 +620,6 @@ Code {0}: {1}\n'''.format(json['errors'][0]['code'], json['errors'][0]['message'
             download_images=False,
             download_gifs=False,
             download_videos=False,
-            twitter_handle=False,
             raw_output=False):
 
         raw_output_file = None
@@ -704,24 +632,23 @@ Code {0}: {1}\n'''.format(json['errors'][0]['code'], json['errors'][0]['message'
             os.linesep, conversation_id))
 
         # Attempt to find the latest tweet id of a previous crawl session
-        max_id = self._get_latest_tweet_id(conversation_id)
+        max_id, payload = self._get_latest_tweet_id(conversation_id)
 
         self._conversation_id = conversation_id
         conversation = Conversation(conversation_id)
-        conversation_url = self._twitter_base_url + '/messages/with/conversation'
-        payload = {'id': conversation_id}
+        conversation_url = '{}/1.1/dm/conversation/{}.json'.format(self._api_url, conversation_id)
+        self._api_headers['referer'] = self._referer_url.format(conversation_id)
+        self._api_headers['cookie']  = self._cookie_string()
+
         processed_tweet_counter = 0
 
         try:
             while True and self._max_id_found is False:
-                response = self._session.get(
-                    conversation_url,
-                    headers=self._ajax_headers,
-                    params=payload)
+                response = self._api_call(conversation_url, self._api_headers, payload)
 
                 json = response.json()
 
-                if 'errors' in json:
+                if 'conversation_timeline' not in json:
                     print('An error occured during the parsing of the tweets.\n')
                     if json['errors'][0]['code'] == 326:
                         print('''DMArchiver was identified as suspicious and your account as been temporarily locked by Twitter.
@@ -732,23 +659,21 @@ You can unlock your account and try again, and possibly use the -d option to slo
 Code {0}: {1}\n'''.format(json['errors'][0]['code'], json['errors'][0]['message']))
                     raise Exception('Stopping execution due to parsing error while retrieving the tweets.')
 
-                if 'max_entry_id' not in json:
-                    print('Begin of thread reached')
-                    break
+                json = json['conversation_timeline']
 
-                payload = {'id': conversation_id,
-                           'max_entry_id': json['min_entry_id']}
+                payload = {'max_id': json['min_entry_id']}
 
-                tweets = json['items']
+                tweets = json['entries']
+                users  = json['users']
 
                 if raw_output:
-                    ordered_tweets = sorted(tweets, reverse=True)
-                    for tweet_id in ordered_tweets:
-                        raw_output_file.write(tweets[tweet_id].encode('UTF-8'))
+                    json_dump(json, raw_output_file)
 
                 # Get tweets for the current request
                 conversation_set = self._process_tweets(
-                    tweets, download_images, download_gifs, download_videos, twitter_handle, max_id)
+                    tweets, users,
+                    {'photo': download_images, 'animated_gif': download_gifs, 'video': download_videos},
+                    max_id)
 
                 # Append to the whole conversation
                 for tweet_id in conversation_set:
@@ -756,7 +681,11 @@ Code {0}: {1}\n'''.format(json['errors'][0]['code'], json['errors'][0]['message'
                     conversation.tweets[tweet_id] = conversation_set[tweet_id]
                     print('Processed tweets: {0}\r'.format(
                         processed_tweet_counter), end='')
-            
+
+                if json['status'] == 'AT_END':
+                    print('Begin of thread reached')
+                    break
+
                 time.sleep(delay)
         except KeyboardInterrupt:
             print(

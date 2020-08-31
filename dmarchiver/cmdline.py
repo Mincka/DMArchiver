@@ -12,6 +12,7 @@
                             Conversation ID
       -u,  --username       Username (e-mail or handle)
       -p,  --password       Password
+      -t,  --token          2FA token code (optional)
       -d,  --delay          Delay between requests (seconds)
       -s,  --save-session   Save the session locally
       -di, --download-images
@@ -19,8 +20,6 @@
       -dg, --download-gifs  Download GIFs (as MP4)
       -dv, --download-videos
                             Download videos (as MP4)
-	  -th,  --twitter-handle     
-	                        Use the Twitter handles instead of the display names	
       -r, --raw-output  Write the raw HTML to a file
 """
 
@@ -44,6 +43,7 @@ def main():
     parser.add_argument("-id", "--conversation_id", help="Conversation ID")
     parser.add_argument("-u", "--username", help="Username (e-mail or handle)")
     parser.add_argument("-p", "--password", help="Password")
+    parser.add_argument("-t", "--token", default=None, help="2FA token")
     parser.add_argument("-d", "--delay", type=float, default=0, help="Delay between requests (seconds)")
     parser.add_argument(
         "-s",
@@ -94,7 +94,7 @@ def main():
 
     crawler = Crawler()
     try:
-        crawler.authenticate(username, password, args.save_session, args.raw_output)
+        crawler.authenticate(username, password, args.save_session, args.raw_output, args.token)
     except PermissionError as err:
         print('Error: {0}'.format(err.args[0]))
         print('Exiting.')
@@ -113,7 +113,7 @@ def main():
                 conversation_id,
                 args.delay,
                 args.download_images,
-                args.download_gifs, args.download_videos, args.twitter_handle, args.raw_output)
+                args.download_gifs, args.download_videos, args.raw_output)
         else:
             print('Conversation ID not specified. Retrieving all the threads.')
             threads = crawler.get_threads(args.delay, args.raw_output)
@@ -121,7 +121,7 @@ def main():
 
             for thread_id in threads:
                 crawler.crawl(thread_id, args.delay, args.download_images,
-                              args.download_gifs, args.download_videos, args.twitter_handle, args.raw_output)
+                              args.download_gifs, args.download_videos, args.raw_output)
                 time.sleep(args.delay)
     except KeyboardInterrupt:
         print('Script execution interruption requested. Exiting.')
