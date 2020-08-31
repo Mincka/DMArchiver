@@ -123,7 +123,6 @@ class Conversation(object):
             with open(filename, file_mode) as file:
                 file.write(file_buffer.encode('UTF-8'))
 
-
 class DMConversationEntry(object):
     """This class is a representation of a DMConversationEntry.
 
@@ -582,8 +581,12 @@ Code {0}: {1}\n'''.format(json['errors'][0]['code'], json['errors'][0]['message'
 
                     if 'attachment' in msg:
                         for k, v in msg['attachment'].items():
-                            element = self._parse_dm_media(k, v, tweet_id, time_stamp, download[k])
-                            text = text.replace(element._media_replace_url, str(element))
+                            if k == 'tweet':
+                                element = DirectMessageTweet(v['expanded_url'])
+                                text = text.replace(element._tweet_url, str(element))
+                            else:
+                                element = self._parse_dm_media(k, v, tweet_id, time_stamp, download[k])
+                                text = text.replace(element._media_replace_url, str(element))
 
                 else: # unknown type
                     raise Exception
