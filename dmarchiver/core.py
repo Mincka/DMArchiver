@@ -480,7 +480,7 @@ Code {0}: {1}\n'''.format(json['errors'][0]['code'], json['errors'][0]['message'
             if len(media_filename_re) > 0:
                 media_type = MediaType.image
                 media_filename = '{0}-{1}-{2}-{3}'.format(
-                    formatted_timestamp, media['id'], media_filename_re[0][0], media_filename_re[0][1])
+                    formatted_timestamp, tweet_id, media_filename_re[0][0], media_filename_re[0][1])
             elif len(media_sticker_filename_re) > 0:
                 # It is a sticker
                 media_type = MediaType.sticker
