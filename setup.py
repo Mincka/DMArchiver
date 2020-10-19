@@ -9,7 +9,7 @@ setup(
 
     packages=find_packages(),
 
-    install_requires=['requests==2.24.0', 'lxml==4.6.1', 'cssselect==1.1.0'],
+    install_requires=['requests==2.24.0', 'lxml==4.6.1', 'cssselect==1.1.0', 'ratelimit'],
 
     author="Julien EHRHART",
     author_email="julien.ehrhart@live.com",
