@@ -490,6 +490,9 @@ Code {0}: {1}\n'''.format(json['errors'][0]['code'], json['errors'][0]['message'
                 print("Unknown media type")
             if media_filename is not None and download:
                 response = self._session.get(media_url, headers=self._api_headers, stream=True)
+                while response.status_code == 429:
+                    time.sleep(60)
+                    response = self._session.get(media_url, headers=self._api_headers, stream=True)
                 if response.status_code == 200:
                     os.makedirs(
                         '{0}/images'.format(self._conversation_id), exist_ok=True)
