@@ -1,4 +1,4 @@
 ﻿cssselect==1.1.0
-lxml==4.7.1
+lxml==4.8.0
 requests==2.27.0
 ratelimit
